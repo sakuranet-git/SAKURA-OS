@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta name="version" content="1.4.1">
-    <title>SAKURA OS v1.4.1</title>
+    <meta name="version" content="1.4.2">
+    <title>SAKURA OS v1.4.2</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -27,7 +27,7 @@
             --accent: #e91e63;
             --accent-glow: rgba(233,30,99,0.3);
             --panel-bg: rgba(255,255,255,0.02);
-            --panel-border: rgba(255,255,255,0.32);
+            --panel-border: rgba(255,255,255,0.55);
             --taskbar-bg: rgba(5,4,12,0.75);
             --win-header: rgba(18,14,30,0.98);
             --win-body: rgba(10,8,18,0.98);
@@ -35,8 +35,8 @@
             --win-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(233,30,99,0.2);
             --win-active-shadow: 0 28px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(233,30,99,0.5);
             --text: #ffffff;
-            --text-dim: rgba(240,237,245,0.92);
-            --text-muted: rgba(240,237,245,0.62);
+            --text-dim: #f0edf5;
+            --text-muted: rgba(240,237,245,0.78);
             --btn-close: #ff5f57;
             --btn-min: #febc2e;
             --btn-max: #28c840;
@@ -91,7 +91,7 @@
         [data-theme="light"] #wallpaper-panel { background:rgba(255,255,255,0.88); }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { width:100%; height:100%; overflow:hidden; font-family:'Outfit','Noto Sans JP',sans-serif; }
-        body { user-select:none; -webkit-user-select:none; color: var(--text); }
+        body { user-select:none; -webkit-user-select:none; color: var(--text); text-shadow:0 1px 6px rgba(0,0,0,0.9); }
 
         /* ── Wallpaper ── */
         #desktop-wallpaper {
@@ -143,9 +143,9 @@
 
         /* Clock */
         .lp-clock { padding:20px 20px 14px; border-bottom:1px solid var(--panel-border); }
-        .clock-hm { font-size:58px; font-weight:800; letter-spacing:-2px; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; text-shadow:0 2px 12px rgba(0,0,0,0.9); }
+        .clock-hm { font-size:58px; font-weight:800; letter-spacing:-2px; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; text-shadow:0 2px 16px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.8); }
         .clock-sec { font-size:26px; font-weight:300; opacity:0.5; margin-left:1px; }
-        .clock-date { margin-top:8px; font-size:13px; font-weight:500; color:var(--text-dim); }
+        .clock-date { margin-top:8px; font-size:13px; font-weight:500; color:var(--text-dim); text-shadow:0 1px 8px rgba(0,0,0,1); }
         .clock-meta { margin-top:3px; font-size:11px; color:var(--text-muted); display:flex; gap:10px; }
         .clock-loc { margin-top:5px; font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
 
@@ -153,7 +153,7 @@
         .lp-weather { padding:16px 20px 14px; border-bottom:1px solid var(--panel-border); }
         .wx-main { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
         .wx-icon { font-size:38px; }
-        .wx-temp { font-size:38px; font-weight:700; color:var(--text); line-height:1; }
+        .wx-temp { font-size:38px; font-weight:700; color:var(--text); line-height:1; text-shadow:0 2px 12px rgba(0,0,0,1); }
         .wx-unit { font-size:16px; font-weight:400; opacity:0.6; }
         .wx-desc { font-size:12px; color:var(--text-dim); font-weight:500; margin-top:2px; }
         .wx-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; margin-bottom:12px; }
@@ -174,7 +174,7 @@
         .lp-app-item:hover { background:rgba(233,30,99,0.1); border-color:rgba(233,30,99,0.2); }
         .lp-app-item:active { transform:scale(0.98); }
         .lp-app-icon { font-size:20px; }
-        .lp-app-name { font-size:13px; font-weight:600; color:var(--text); text-shadow:0 1px 6px rgba(0,0,0,0.8); }
+        .lp-app-name { font-size:13px; font-weight:600; color:var(--text); text-shadow:0 1px 8px rgba(0,0,0,1); }
 
         /* ── Info Area ── */
         #info-area {
@@ -183,10 +183,10 @@
         .currency-row { position:absolute; top:18px; right:20px; display:flex; gap:12px; z-index:11; }
         .currency-card {
             background:transparent;
-            border:1.5px solid rgba(255,255,255,0.45); border-radius:var(--radius); padding:14px 18px; min-width:155px;
+            border:2px solid rgba(255,255,255,0.6); border-radius:var(--radius); padding:14px 18px; min-width:155px;
         }
         .cur-pair { font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:0.4px; margin-bottom:6px; }
-        .cur-rate { font-size:26px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; text-shadow:0 1px 8px rgba(0,0,0,0.9); }
+        .cur-rate { font-size:26px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; text-shadow:0 1px 10px rgba(0,0,0,1), 0 0 20px rgba(0,0,0,0.8); }
         .cur-unit { font-size:13px; font-weight:400; opacity:0.55; }
         .cur-change { font-size:11px; font-weight:600; margin-top:3px; }
         .cur-change.up { color:#4ade80; }
@@ -199,14 +199,14 @@
         }
         .news-card {
             background:transparent;
-            border:1.5px solid rgba(255,255,255,0.4); border-radius:var(--radius); padding:12px 14px;
+            border:2px solid rgba(255,255,255,0.55); border-radius:var(--radius); padding:12px 14px;
             display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; cursor:pointer;
             transition:border-color var(--tr), background var(--tr), transform var(--tr);
             user-select:text; -webkit-user-select:text;
         }
         .news-card:hover { border-color:rgba(233,30,99,0.4); background:rgba(233,30,99,0.06); transform:translateY(-2px); }
         .news-src { font-size:10px; font-weight:700; color:#f06292; letter-spacing:0.3px; margin-bottom:6px; }
-        .news-title { font-size:12px; font-weight:600; color:var(--text); line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; text-shadow:0 1px 6px rgba(0,0,0,0.9); }
+        .news-title { font-size:12px; font-weight:700; color:var(--text); line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; text-shadow:0 1px 8px rgba(0,0,0,1); }
         .news-time { font-size:10px; color:var(--text-muted); margin-top:8px; }
 
         /* ── Desktop Calendar + Tasks ── */
@@ -217,7 +217,7 @@
         #desktop-calendar {
             width:330px; flex-shrink:0;
             background:transparent;
-            border:1.5px solid rgba(255,255,255,0.4); border-radius:var(--radius); padding:16px;
+            border:2px solid rgba(255,255,255,0.55); border-radius:var(--radius); padding:16px;
         }
         .dcal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
         .dcal-title { font-size:14px; font-weight:700; color:var(--text); }
@@ -240,16 +240,16 @@
         #dcal-tasks {
             flex:1; min-width:0;
             background:transparent;
-            border:1.5px solid rgba(255,255,255,0.4); border-radius:var(--radius); padding:14px;
+            border:2px solid rgba(255,255,255,0.55); border-radius:var(--radius); padding:14px;
         }
         .dcal-tasks-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-        .dcal-tasks-title { font-size:13px; font-weight:700; color:var(--text); text-shadow:0 1px 6px rgba(0,0,0,0.9); }
+        .dcal-tasks-title { font-size:13px; font-weight:700; color:var(--text); text-shadow:0 1px 8px rgba(0,0,0,1); }
         .dcal-tasks-count { font-size:11px; font-weight:700; color:var(--accent); background:rgba(233,30,99,0.12); border-radius:10px; padding:2px 8px; }
-        .dcal-task-item { padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.3); background:transparent; margin-bottom:6px; cursor:pointer; transition:background var(--tr), border-color var(--tr); }
+        .dcal-task-item { padding:8px 10px; border-radius:8px; border:1.5px solid rgba(255,255,255,0.4); background:transparent; margin-bottom:6px; cursor:pointer; transition:background var(--tr), border-color var(--tr); }
         .dcal-task-item:hover { background:rgba(233,30,99,0.08); border-color:rgba(233,30,99,0.3); }
         .dcal-task-item:last-child { margin-bottom:0; }
         .dcal-task-time { font-size:10px; font-weight:700; color:var(--accent); margin-bottom:3px; }
-        .dcal-task-name { font-size:12px; font-weight:700; color:var(--text); text-shadow:0 1px 6px rgba(0,0,0,0.9); }
+        .dcal-task-name { font-size:12px; font-weight:700; color:var(--text); text-shadow:0 1px 8px rgba(0,0,0,1); }
         .dcal-task-type { font-size:10px; color:var(--text-muted); margin-left:4px; }
         .dcal-task-addr { font-size:11px; color:var(--text-dim); margin-top:3px; }
         .dcal-tasks-empty { font-size:12px; color:var(--text-muted); text-align:center; padding:16px 0; }
