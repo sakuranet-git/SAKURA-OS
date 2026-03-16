@@ -236,6 +236,10 @@
         .wp-swatch:hover { border-color:rgba(255,255,255,0.4); transform:scale(1.04); }
         .wp-swatch.active { border-color:var(--accent); }
         .wp-swatch-lbl { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.6); font-size:9px; font-weight:600; color:#fff; text-align:center; padding:3px; }
+        .wp-upload { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+        .wp-upload-btn { padding:7px 14px; border-radius:8px; background:rgba(255,255,255,0.07); border:1px solid var(--panel-border); color:var(--text-dim); cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; transition:all var(--tr); white-space:nowrap; }
+        .wp-upload-btn:hover { background:rgba(255,255,255,0.14); color:var(--text); }
+        .wp-file-name { font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
         .wp-custom { display:flex; gap:8px; }
         .wp-custom input { flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.05); color:var(--text); font-size:12px; font-family:inherit; outline:none; user-select:text; -webkit-user-select:text; }
         .wp-custom input:focus { border-color:var(--accent); }
@@ -351,6 +355,13 @@
         <button class="wp-x" onclick="closeWpPanel()">✕</button>
     </div>
     <div class="wp-grid" id="wp-grid"></div>
+    <div class="wp-upload">
+        <label class="wp-upload-btn">
+            📁 画像ファイル
+            <input type="file" accept="image/*" id="wp-file" style="display:none" onchange="applyFileWp(this)">
+        </label>
+        <span id="wp-file-name" class="wp-file-name">ファイルを選択してください</span>
+    </div>
     <div class="wp-custom">
         <input type="text" id="wp-url" placeholder="画像URL または CSSグラデーション">
         <button class="wp-apply" onclick="applyCustomWp()">適用</button>
@@ -513,40 +524,45 @@ async function fetchWeather() {
     }
 }
 
-// ── News (Yahoo! Japan RSS via allorigins proxy) ──
+// ── News (Yahoo! Japan → NHK fallback) ──
 async function fetchNews() {
-    const RSS_FEEDS = [
-        'https://news.yahoo.co.jp/rss/topics/top-picks.xml',
-        'https://news.yahoo.co.jp/pickup/rss.xml',
-        'https://www3.nhk.or.jp/rss/news/cat0.xml',
+    const SOURCES = [
+        { label:'Yahoo! ニュース', url:'https://news.yahoo.co.jp/rss/topics/top-picks.xml' },
+        { label:'Yahoo! ニュース', url:'https://news.yahoo.co.jp/pickup/rss.xml' },
+        { label:'NHK ニュース',    url:'https://www3.nhk.or.jp/rss/news/cat0.xml' },
     ];
-    let items = [];
-    for (const rss of RSS_FEEDS) {
+    let newsItems = [], srcLabel = '';
+
+    for (const src of SOURCES) {
         try {
-            const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(rss));
-            const text = await res.text();
-            const xml = new DOMParser().parseFromString(text, 'text/xml');
-            const found = Array.from(xml.querySelectorAll('item'));
-            if (found.length > 0) { items = found; break; }
-        } catch { /* try next */ }
+            // rss2json: CORSフリー・JSON変換API
+            const api = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(src.url);
+            const res  = await fetch(api);
+            const data = await res.json();
+            if (data.status === 'ok' && data.items?.length > 0) {
+                newsItems = data.items.map(it => ({
+                    title: it.title || '',
+                    desc:  (it.description || '').replace(/<[^>]+>/g,'').trim(),
+                    link:  it.link  || '#',
+                    pub:   it.pubDate || '',
+                }));
+                srcLabel = src.label;
+                break;
+            }
+        } catch { /* try next source */ }
     }
 
-    const src = items.length > 0
-        ? (items[0].querySelector('link')?.textContent?.includes('yahoo') ? 'Yahoo! ニュース' : 'NHK ニュース')
-        : 'ニュース';
-
     // Ticker (duplicate for seamless loop)
-    const tickerItems = items.slice(0, 10);
-    const tickerHtml = tickerItems.map(it => {
-        const t = it.querySelector('title')?.textContent || '';
-        return `<span class="ticker-item">${t}</span>`;
-    }).join('');
-    document.getElementById('ticker-track').innerHTML = tickerHtml + tickerHtml;
+    const tickerHtml = newsItems.slice(0,10).map(it =>
+        `<span class="ticker-item">${it.title}</span>`
+    ).join('');
+    document.getElementById('ticker-track').innerHTML =
+        tickerHtml ? tickerHtml + tickerHtml : '<span class="ticker-item">ニュースを読み込み中...</span>';
 
-    // Cards — fill up to 12 with available items (repeat if needed)
+    // Cards — ensure 12 tiles
     const grid = document.getElementById('news-grid');
     grid.innerHTML = '';
-    if (items.length === 0) {
+    if (newsItems.length === 0) {
         for (let i = 0; i < 12; i++) {
             const c = document.createElement('div');
             c.className = 'news-card';
@@ -556,15 +572,11 @@ async function fetchNews() {
         return;
     }
     for (let i = 0; i < 12; i++) {
-        const it    = items[i % items.length];
-        const title = it.querySelector('title')?.textContent || '';
-        const desc  = (it.querySelector('description')?.textContent || '').replace(/<[^>]+>/g,'').trim();
-        const link  = it.querySelector('link')?.textContent || '#';
-        const pub   = it.querySelector('pubDate')?.textContent || '';
-        const card  = document.createElement('div');
+        const it   = newsItems[i % newsItems.length];
+        const card = document.createElement('div');
         card.className = 'news-card';
-        card.innerHTML = `<div class="news-src">${src}</div><div class="news-title">${title}</div><div class="news-desc">${desc}</div><div class="news-time">${fmtDate(pub)}</div>`;
-        card.addEventListener('click', () => window.open(link,'_blank'));
+        card.innerHTML = `<div class="news-src">${srcLabel}</div><div class="news-title">${it.title}</div><div class="news-desc">${it.desc}</div><div class="news-time">${fmtDate(it.pub)}</div>`;
+        card.addEventListener('click', () => window.open(it.link, '_blank'));
         grid.appendChild(card);
     }
 }
@@ -733,13 +745,13 @@ function renderWpGrid() {
 
 function applyWp(bg, id) {
     const el = document.getElementById('desktop-wallpaper');
-    if (bg.startsWith('http') || bg.match(/^(\/|\.)/)) {
+    if (bg.startsWith('http') || bg.startsWith('data:') || bg.match(/^(\/|\.)/)) {
         el.style.cssText = `background:url(${bg}) center/cover no-repeat; transition:background 0.6s;`;
     } else {
         el.style.cssText = `background:${bg}; background-size:cover; transition:background 0.6s;`;
     }
     currentWpId = id || 'custom';
-    localStorage.setItem('sakura_os_wp', JSON.stringify({ bg, id: currentWpId }));
+    try { localStorage.setItem('sakura_os_wp', JSON.stringify({ bg, id: currentWpId })); } catch { /* storage full */ }
     document.querySelectorAll('.wp-swatch').forEach(s => s.classList.remove('active'));
     const active = document.getElementById('wps-' + currentWpId);
     if (active) active.classList.add('active');
@@ -750,6 +762,21 @@ function applyCustomWp() {
     if (!v) return;
     applyWp(v, 'custom');
     showToast('🖼️ 壁紙を変更しました');
+}
+
+// ── ファイルアップロード壁紙（base64→localStorage永続保存）──
+function applyFileWp(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        applyWp(e.target.result, 'upload');
+        document.getElementById('wp-file-name').textContent = file.name;
+        showToast('🖼️ 壁紙をアップロードしました');
+    };
+    reader.readAsDataURL(file);
+    // リセットして同ファイルを再選択可能にする
+    input.value = '';
 }
 function toggleWpPanel() { document.getElementById('wallpaper-panel').classList.toggle('open'); }
 function closeWpPanel()  { document.getElementById('wallpaper-panel').classList.remove('open'); }
