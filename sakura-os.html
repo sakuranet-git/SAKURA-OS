@@ -561,7 +561,14 @@ async function init() {
     if (savedWp) {
         try {
             const w = JSON.parse(savedWp);
-            applyWp(w.bg, w.id);
+            if (w.id === 'upload') {
+                // アップロード画像はwpUploadsから復元（二重保存なし）
+                const idx = (typeof w.uploadIdx === 'number' && wpUploads[w.uploadIdx]) ? w.uploadIdx : 0;
+                if (wpUploads.length > 0) applyWp(wpUploads[idx].dataUrl, 'upload');
+                else applyWp(WALLPAPERS[0].bg, WALLPAPERS[0].id);
+            } else {
+                applyWp(w.bg, w.id);
+            }
         }
         catch { applyWp(WALLPAPERS[0].bg, WALLPAPERS[0].id); }
     } else {
@@ -951,7 +958,13 @@ function applyWp(bg, id, fade) {
         doApply();
     }
     currentWpId = id || 'custom';
-    try { localStorage.setItem('sakura_os_wp', JSON.stringify({ bg, id: currentWpId })); } catch { /* storage full */ }
+    // アップロード画像はwpUploadsに既に保存済みのため、インデックスだけ保存（二重保存でストレージ超過を防ぐ）
+    if (currentWpId === 'upload') {
+        const idx = wpUploads.findIndex(u => u.dataUrl === bg);
+        try { localStorage.setItem('sakura_os_wp', JSON.stringify({ id: 'upload', uploadIdx: idx >= 0 ? idx : 0 })); } catch { showToast('⚠️ ストレージ容量不足'); }
+    } else {
+        try { localStorage.setItem('sakura_os_wp', JSON.stringify({ bg, id: currentWpId })); } catch { showToast('⚠️ ストレージ容量不足'); }
+    }
     document.querySelectorAll('.wp-swatch').forEach(s => s.classList.remove('active'));
     const active = document.getElementById('wps-' + currentWpId);
     if (active) active.classList.add('active');
