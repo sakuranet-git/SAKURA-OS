@@ -176,6 +176,14 @@
         .lp-app-icon { font-size:20px; }
         .lp-app-name { font-size:13px; font-weight:600; color:var(--text); text-shadow:0 1px 8px rgba(0,0,0,1); }
 
+        /* Mascot Toggle (left panel) */
+        .lp-mascot-row { padding:10px 20px 14px; border-top:1px solid var(--panel-border); }
+        .lp-mascot-toggle { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text-dim); user-select:none; }
+        .lp-mascot-knob { width:36px; height:20px; border-radius:10px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); position:relative; transition:background var(--tr),border-color var(--tr); flex-shrink:0; }
+        .lp-mascot-knob::after { content:''; position:absolute; top:3px; left:3px; width:12px; height:12px; border-radius:50%; background:#fff; transition:transform var(--tr); }
+        #mascot-knob[data-on="1"] { background:var(--accent); border-color:var(--accent); }
+        #mascot-knob[data-on="1"]::after { transform:translateX(16px); }
+
         /* ── Info Area ── */
         #info-area {
             position:fixed; left:272px; top:32px; bottom:48px; right:0; z-index:10; overflow:hidden;
@@ -431,6 +439,12 @@
     </div>
     <div class="lp-section-title">アプリケーション</div>
     <div class="lp-apps" id="lp-apps"></div>
+    <div class="lp-mascot-row">
+        <label class="lp-mascot-toggle" onclick="toggleMascotDisplay()">
+            <span class="lp-mascot-knob" id="mascot-knob"></span>
+            🌸 マスコット表示
+        </label>
+    </div>
 </div>
 
 <!-- Info Area -->
@@ -524,12 +538,6 @@
             <option value="600">10分</option>
         </select>
         <span class="wp-slide-indicator" id="wp-slide-indicator"></span>
-    </div>
-    <div class="wp-slide-row" style="margin-top:8px; padding-top:8px; border-top:1px solid var(--panel-border);">
-        <label class="wp-slide-toggle" id="mascot-toggle-label" onclick="toggleMascotDisplay()" style="cursor:pointer;">
-            <span class="wp-slide-knob" id="mascot-knob"></span>
-            🌸 マスコット表示
-        </label>
     </div>
 </div>
 
@@ -1343,35 +1351,16 @@ document.addEventListener('DOMContentLoaded', init);
 
 // ── Mascot Toggle ──
 function toggleMascotDisplay() {
-    if (window.sakuraMascot) {
-        window.sakuraMascot.toggle();
-    }
+    if (window.sakuraMascot) window.sakuraMascot.toggle();
     updateMascotKnob();
 }
 function updateMascotKnob() {
     const knob = document.getElementById('mascot-knob');
     if (!knob) return;
     const isOn = localStorage.getItem('sakura_mascot_off') !== 'true';
-    if (isOn) {
-        knob.style.background = 'var(--accent)';
-        knob.style.borderColor = 'var(--accent)';
-    } else {
-        knob.style.background = '';
-        knob.style.borderColor = '';
-    }
-    // knob の ::after 疑似要素は CSS で制御できないため、data属性でスタイル付与
     knob.setAttribute('data-on', isOn ? '1' : '0');
 }
-document.addEventListener('DOMContentLoaded', () => {
-    // knob ::after のスライドを data 属性でコントロールするインラインスタイル注入
-    const style = document.createElement('style');
-    style.textContent = `
-        #mascot-knob[data-on="1"] { background:var(--accent)!important; border-color:var(--accent)!important; }
-        #mascot-knob[data-on="1"]::after { transform:translateX(16px); }
-    `;
-    document.head.appendChild(style);
-    updateMascotKnob();
-});
+document.addEventListener('DOMContentLoaded', updateMascotKnob);
 </script>
 <script src="/system/SAKURA-NET-Mascot/mascot.js"></script>
 </body>
