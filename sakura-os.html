@@ -8,6 +8,8 @@
     <title>SAKURA OS v1.3.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         :root {
             --accent: #e91e63;
@@ -195,26 +197,51 @@
         .news-title { font-size:12px; font-weight:600; color:var(--text); line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; }
         .news-time { font-size:10px; color:var(--text-muted); margin-top:8px; }
 
-        /* ── Desktop Calendar ── */
-        #desktop-calendar {
-            position:absolute; top:464px; left:14px; width:290px; z-index:11;
-            background:rgba(8,6,18,0.02); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-            border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius); padding:14px;
+        /* ── Desktop Calendar + Tasks ── */
+        #dcal-wrapper {
+            position:absolute; top:464px; left:14px; right:14px; z-index:11;
+            display:flex; gap:12px; align-items:flex-start;
         }
-        .dcal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-        .dcal-title { font-size:13px; font-weight:700; color:var(--text); }
-        .dcal-nav { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:2px 6px; border-radius:6px; transition:color var(--tr), background var(--tr); }
+        #desktop-calendar {
+            width:330px; flex-shrink:0;
+            background:rgba(8,6,18,0.02); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+            border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius); padding:16px;
+        }
+        .dcal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .dcal-title { font-size:14px; font-weight:700; color:var(--text); }
+        .dcal-nav { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:15px; padding:2px 7px; border-radius:6px; transition:color var(--tr), background var(--tr); }
         .dcal-nav:hover { color:var(--text); background:rgba(255,255,255,0.08); }
-        .dcal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; }
-        .dcal-dn { font-size:9px; font-weight:700; color:var(--text-muted); padding:3px 0 6px; }
+        .dcal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; text-align:center; }
+        .dcal-dn { font-size:10px; font-weight:700; color:var(--text-muted); padding:3px 0 7px; }
         .dcal-dn.sun { color:rgba(255,100,100,0.7); }
         .dcal-dn.sat { color:rgba(100,150,255,0.7); }
-        .dcal-cell { font-size:11px; font-weight:600; color:var(--text-dim); padding:5px 2px; border-radius:6px; cursor:default; position:relative; transition:background var(--tr), color var(--tr); }
+        .dcal-cell { font-size:12px; font-weight:600; color:var(--text-dim); padding:6px 2px; border-radius:7px; cursor:pointer; position:relative; transition:background var(--tr), color var(--tr); }
+        .dcal-cell:hover { background:rgba(255,255,255,0.08); color:var(--text); }
         .dcal-cell.sun { color:rgba(255,120,120,0.8); }
         .dcal-cell.sat { color:rgba(120,160,255,0.8); }
         .dcal-cell.today { background:var(--accent); color:#fff !important; font-weight:800; }
+        .dcal-cell.today:hover { background:var(--accent); filter:brightness(1.1); }
         .dcal-cell.today .dcal-dot { background:#fff; }
-        .dcal-dot { width:4px; height:4px; background:var(--accent); border-radius:50%; position:absolute; bottom:1px; left:50%; transform:translateX(-50%); }
+        .dcal-cell.selected:not(.today) { background:rgba(233,30,99,0.2); color:var(--text); }
+        .dcal-dot { width:4px; height:4px; background:var(--accent); border-radius:50%; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); }
+        /* Tasks panel */
+        #dcal-tasks {
+            flex:1; min-width:0;
+            background:rgba(8,6,18,0.02); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+            border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius); padding:14px;
+        }
+        .dcal-tasks-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+        .dcal-tasks-title { font-size:13px; font-weight:700; color:var(--text); }
+        .dcal-tasks-count { font-size:11px; font-weight:700; color:var(--accent); background:rgba(233,30,99,0.12); border-radius:10px; padding:2px 8px; }
+        .dcal-task-item { padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.03); margin-bottom:6px; cursor:pointer; transition:background var(--tr), border-color var(--tr); }
+        .dcal-task-item:hover { background:rgba(233,30,99,0.08); border-color:rgba(233,30,99,0.3); }
+        .dcal-task-item:last-child { margin-bottom:0; }
+        .dcal-task-time { font-size:10px; font-weight:700; color:var(--accent); margin-bottom:3px; }
+        .dcal-task-name { font-size:12px; font-weight:700; color:var(--text); }
+        .dcal-task-type { font-size:10px; color:var(--text-muted); margin-left:4px; }
+        .dcal-task-addr { font-size:11px; color:var(--text-dim); margin-top:3px; }
+        .dcal-tasks-empty { font-size:12px; color:var(--text-muted); text-align:center; padding:16px 0; }
+        .dcal-tasks-loading { font-size:11px; color:var(--text-muted); text-align:center; padding:12px 0; }
 
         /* ── Windows ── */
         #windows-container { position:fixed; left:0; top:32px; right:0; bottom:48px; z-index:100; pointer-events:none; }
@@ -411,13 +438,22 @@
     <div class="news-grid" id="news-grid">
         <!-- news cards injected by JS -->
     </div>
-    <div id="desktop-calendar">
-        <div class="dcal-header">
-            <button class="dcal-nav" onclick="dcalMove(-1)">‹</button>
-            <span class="dcal-title" id="dcal-title"></span>
-            <button class="dcal-nav" onclick="dcalMove(1)">›</button>
+    <div id="dcal-wrapper">
+        <div id="desktop-calendar">
+            <div class="dcal-header">
+                <button class="dcal-nav" onclick="dcalMove(-1)">‹</button>
+                <span class="dcal-title" id="dcal-title"></span>
+                <button class="dcal-nav" onclick="dcalMove(1)">›</button>
+            </div>
+            <div class="dcal-grid" id="dcal-grid"></div>
         </div>
-        <div class="dcal-grid" id="dcal-grid"></div>
+        <div id="dcal-tasks">
+            <div class="dcal-tasks-header">
+                <span class="dcal-tasks-title" id="dcal-tasks-title">🎯 本日の作業予定</span>
+                <span class="dcal-tasks-count" id="dcal-tasks-count">0件</span>
+            </div>
+            <div id="dcal-tasks-list"><div class="dcal-tasks-loading">読み込み中...</div></div>
+        </div>
     </div>
 </div>
 
@@ -550,6 +586,8 @@ async function init() {
     renderWpGrid();
     renderUploadList();
     renderDesktopCalendar();
+    renderDcalTasks(new Date());
+    initFirestoreCalendar();
     startClock();
     fetchWeather();
     fetchNews();
@@ -1071,8 +1109,45 @@ function loadSlideSettings() {
     } catch {}
 }
 
-// ── Desktop Calendar ──
+// ── Desktop Calendar + Tasks (Firestore連携) ──
 let dcalDate = new Date();
+let dcalSelectedDate = null; // null = 今日
+let customerRecords  = [];
+let dcalFsReady      = false;
+
+// 定例予定（ordersystem.htmlと同ロジック）
+function dcalGetRecurring(year, month, day) {
+    const tasks = [];
+    if (day ===  2) tasks.push({ name:'イオンカード引き落とし',              taskType:'定例引落', timeWorkStart:'', timeWorkEnd:'', address:'-' });
+    if (day === 10) tasks.push({ name:'ドコモ・三井住友・メルカリカード・引落', taskType:'定例引落', timeWorkStart:'', timeWorkEnd:'', address:'-' });
+    if (day === 25) tasks.push({ name:'自動車保険',                          taskType:'定例引落', timeWorkStart:'', timeWorkEnd:'', address:'-' });
+    if (day === 27) tasks.push({ name:'楽天・PayPayカード・ペイディ引落',     taskType:'定例引落', timeWorkStart:'', timeWorkEnd:'', address:'-' });
+    return tasks;
+}
+
+function dcalDateStr(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;  // YYYY/MM/DD
+}
+
+function dcalGetTasksFor(date) {
+    const t1 = dcalDateStr(date);
+    const t2 = t1.replace(/\//g, '-');
+    const from_fs = customerRecords.filter(r => {
+        const dw = String(r.dateWork || '').trim();
+        return dw === t1 || dw === t2;
+    });
+    const recurring = dcalGetRecurring(date.getFullYear(), date.getMonth(), date.getDate());
+    return [...from_fs, ...recurring];
+}
+
+function dcalHasTask(year, month, day) {
+    const date = new Date(year, month, day);
+    return dcalGetTasksFor(date).length > 0;
+}
+
 function renderDesktopCalendar() {
     const year  = dcalDate.getFullYear();
     const month = dcalDate.getMonth();
@@ -1080,19 +1155,91 @@ function renderDesktopCalendar() {
     document.getElementById('dcal-title').textContent = `${year}年 ${month + 1}月`;
     const firstDay    = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const dayNames    = ['日','月','火','水','木','金','土'];
-    const dayClass    = ['sun','','','','','','sat'];
+    const dayNames = ['日','月','火','水','木','金','土'];
+    const dayClass = ['sun','','','','','','sat'];
     let html = dayNames.map((d,i) => `<div class="dcal-dn ${dayClass[i]}">${d}</div>`).join('');
     for (let i = 0; i < firstDay; i++) html += '<div></div>';
+    const selStr = dcalSelectedDate ? dcalDateStr(dcalSelectedDate) : dcalDateStr(today);
     for (let d = 1; d <= daysInMonth; d++) {
-        const dow  = (firstDay + d - 1) % 7;
-        const isToday = year === today.getFullYear() && month === today.getMonth() && d === today.getDate();
-        const cls = ['dcal-cell', dayClass[dow], isToday ? 'today' : ''].filter(Boolean).join(' ');
-        html += `<div class="${cls}">${d}</div>`;
+        const dow      = (firstDay + d - 1) % 7;
+        const isToday  = year === today.getFullYear() && month === today.getMonth() && d === today.getDate();
+        const dateObj  = new Date(year, month, d);
+        const isSel    = dcalDateStr(dateObj) === selStr;
+        const hasDot   = dcalHasTask(year, month, d);
+        const cls      = ['dcal-cell', dayClass[dow], isToday ? 'today' : '', isSel && !isToday ? 'selected' : ''].filter(Boolean).join(' ');
+        const dateS    = dcalDateStr(dateObj);
+        html += `<div class="${cls}" onclick="dcalSelectDate('${dateS}')">${d}${hasDot ? '<div class="dcal-dot"></div>' : ''}</div>`;
     }
     document.getElementById('dcal-grid').innerHTML = html;
 }
-function dcalMove(dir) { dcalDate.setMonth(dcalDate.getMonth() + dir); renderDesktopCalendar(); }
+
+function dcalSelectDate(dateStr) {
+    const parts = dateStr.split('/');
+    dcalSelectedDate = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+    renderDesktopCalendar();
+    renderDcalTasks(dcalSelectedDate);
+}
+
+function renderDcalTasks(date) {
+    const today = new Date();
+    const isToday = date.getFullYear() === today.getFullYear() &&
+                    date.getMonth()    === today.getMonth()    &&
+                    date.getDate()     === today.getDate();
+    const m = date.getMonth() + 1, d = date.getDate();
+    document.getElementById('dcal-tasks-title').textContent =
+        isToday ? '🎯 本日の作業予定' : `🗓 ${m}月${d}日の作業予定`;
+
+    if (!dcalFsReady) {
+        document.getElementById('dcal-tasks-list').innerHTML = '<div class="dcal-tasks-loading">読み込み中...</div>';
+        return;
+    }
+    const tasks = dcalGetTasksFor(date);
+    document.getElementById('dcal-tasks-count').textContent = `${tasks.length}件`;
+    const list = document.getElementById('dcal-tasks-list');
+    if (tasks.length === 0) {
+        list.innerHTML = '<div class="dcal-tasks-empty">作業予定はありません 🎉</div>';
+        return;
+    }
+    list.innerHTML = tasks.map(t => {
+        const time = t.timeWorkStart ? `⏰ ${t.timeWorkStart}〜${t.timeWorkEnd || ''}` : '⏰ 時間未設定';
+        const addr = (t.address && t.address !== '-') ? `<div class="dcal-task-addr">📍 ${t.address}</div>` : '';
+        return `<div class="dcal-task-item">
+            <div class="dcal-task-time">${time}</div>
+            <div><span class="dcal-task-name">${t.name}</span><span class="dcal-task-type">${t.taskType ? '(' + t.taskType + ')' : ''}</span></div>
+            ${addr}
+        </div>`;
+    }).join('');
+}
+
+function dcalMove(dir) {
+    dcalDate.setMonth(dcalDate.getMonth() + dir);
+    renderDesktopCalendar();
+}
+
+function initFirestoreCalendar() {
+    try {
+        const firebaseConfig = {
+            apiKey:        'REMOVED_SEE_SERVER',
+            authDomain:    'sakura-net-db.firebaseapp.com',
+            projectId:     'sakura-net-db',
+            storageBucket: 'sakura-net-db.firebasestorage.app',
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        db.collection('customer_records').onSnapshot(snap => {
+            customerRecords = snap.docs.map(d => d.data());
+            dcalFsReady = true;
+            renderDesktopCalendar();
+            renderDcalTasks(dcalSelectedDate || new Date());
+        }, () => {
+            dcalFsReady = true;
+            renderDcalTasks(dcalSelectedDate || new Date());
+        });
+    } catch(e) {
+        dcalFsReady = true;
+        renderDcalTasks(dcalSelectedDate || new Date());
+    }
+}
 
 // ── Theme ──
 function setTheme(t) {
