@@ -381,6 +381,7 @@
         #toast { position:fixed; bottom:60px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(18,14,30,0.97); border:1px solid rgba(255,255,255,0.1); border-radius:100px; padding:8px 18px; font-size:13px; font-weight:600; color:var(--text); backdrop-filter:blur(16px); z-index:99998; opacity:0; transition:all 0.25s; pointer-events:none; white-space:nowrap; }
         #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
     </style>
+    <link rel="stylesheet" href="/system/SAKURA-NET-Mascot/mascot.css">
 </head>
 <body>
 
@@ -523,6 +524,12 @@
             <option value="600">10分</option>
         </select>
         <span class="wp-slide-indicator" id="wp-slide-indicator"></span>
+    </div>
+    <div class="wp-slide-row" style="margin-top:8px; padding-top:8px; border-top:1px solid var(--panel-border);">
+        <label class="wp-slide-toggle" id="mascot-toggle-label" onclick="toggleMascotDisplay()" style="cursor:pointer;">
+            <span class="wp-slide-knob" id="mascot-knob"></span>
+            🌸 マスコット表示
+        </label>
     </div>
 </div>
 
@@ -1333,6 +1340,39 @@ function showToast(msg) {
 
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', init);
+
+// ── Mascot Toggle ──
+function toggleMascotDisplay() {
+    if (window.sakuraMascot) {
+        window.sakuraMascot.toggle();
+    }
+    updateMascotKnob();
+}
+function updateMascotKnob() {
+    const knob = document.getElementById('mascot-knob');
+    if (!knob) return;
+    const isOn = localStorage.getItem('sakura_mascot_off') !== 'true';
+    if (isOn) {
+        knob.style.background = 'var(--accent)';
+        knob.style.borderColor = 'var(--accent)';
+    } else {
+        knob.style.background = '';
+        knob.style.borderColor = '';
+    }
+    // knob の ::after 疑似要素は CSS で制御できないため、data属性でスタイル付与
+    knob.setAttribute('data-on', isOn ? '1' : '0');
+}
+document.addEventListener('DOMContentLoaded', () => {
+    // knob ::after のスライドを data 属性でコントロールするインラインスタイル注入
+    const style = document.createElement('style');
+    style.textContent = `
+        #mascot-knob[data-on="1"] { background:var(--accent)!important; border-color:var(--accent)!important; }
+        #mascot-knob[data-on="1"]::after { transform:translateX(16px); }
+    `;
+    document.head.appendChild(style);
+    updateMascotKnob();
+});
 </script>
+<script src="/system/SAKURA-NET-Mascot/mascot.js"></script>
 </body>
 </html>
