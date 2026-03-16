@@ -1,5 +1,11 @@
 # SAKURA OS リリースノート
 
+## v1.3.3 (2026-03-16)
+
+### バグ修正
+
+- カレンダー・本日の作業予定が反映されない問題を修正：`gw_api.php` の相対パスを `groupware/gw_api.php` に修正（`/system/gw_api.php` ではなく `/system/groupware/gw_api.php` が正しいパス）
+
 ## v1.3.2 (2026-03-16)
 
 ### バグ修正
