@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="version" content="1.0.0">
+    <title>SAKURA OS v1.0.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==============================
+           CSS変数 / テーマ
+        ============================== */
+        :root {
+            --accent: #e91e63;
+            --accent-soft: #f06292;
+            --accent-glow: rgba(233, 30, 99, 0.25);
+            --bg: #0c0a14;
+            --bg-overlay: rgba(12, 10, 20, 0.85);
+            --desktop-bg: linear-gradient(135deg, #0c0a14 0%, #1a0a24 50%, #0a0a1e 100%);
+            --taskbar-bg: rgba(10, 8, 18, 0.92);
+            --win-header: #1e1a30;
+            --win-body: #16121e;
+            --win-border: rgba(233, 30, 99, 0.25);
+            --win-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(233, 30, 99, 0.15);
+            --win-active-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(233, 30, 99, 0.4);
+            --text: #f0edf5;
+            --text-dim: rgba(240, 237, 245, 0.55);
+            --text-muted: rgba(240, 237, 245, 0.35);
+            --icon-bg: rgba(255, 255, 255, 0.05);
+            --icon-hover: rgba(233, 30, 99, 0.15);
+            --icon-border: rgba(255, 255, 255, 0.08);
+            --btn-close: #ff5f57;
+            --btn-min: #febc2e;
+            --btn-max: #28c840;
+            --radius: 14px;
+            --radius-sm: 10px;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        [data-theme="light"] {
+            --bg: #e8e8f0;
+            --bg-overlay: rgba(232, 232, 240, 0.85);
+            --desktop-bg: linear-gradient(135deg, #dde0f0 0%, #e8d8f0 50%, #d8e8f0 100%);
+            --taskbar-bg: rgba(250, 248, 255, 0.95);
+            --win-header: #f0eef8;
+            --win-body: #fafafa;
+            --win-border: rgba(233, 30, 99, 0.2);
+            --win-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(233, 30, 99, 0.1);
+            --win-active-shadow: 0 24px 80px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(233, 30, 99, 0.3);
+            --text: #1a1a2e;
+            --text-dim: rgba(26, 26, 46, 0.6);
+            --text-muted: rgba(26, 26, 46, 0.4);
+            --icon-bg: rgba(255, 255, 255, 0.7);
+            --icon-hover: rgba(233, 30, 99, 0.1);
+            --icon-border: rgba(0, 0, 0, 0.08);
+        }
+
+        /* ==============================
+           リセット / ベース
+        ============================== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100%; height: 100%; overflow: hidden;
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            font-size: 14px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            background: var(--desktop-bg);
+            color: var(--text);
+        }
+
+        /* ==============================
+           デスクトップ
+        ============================== */
+        #desktop {
+            position: fixed;
+            inset: 0 0 48px 0;
+            overflow: hidden;
+        }
+        #desktop-wallpaper {
+            position: absolute;
+            inset: 0;
+            background: var(--desktop-bg);
+            transition: background 0.5s;
+        }
+        #desktop-wallpaper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(233, 30, 99, 0.1) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 80%, rgba(124, 58, 237, 0.08) 0%, transparent 55%);
+        }
+        #windows-container {
+            position: absolute;
+            inset: 0;
+        }
+        /* ドラッグ中にiframeがマウスを奪うのを防ぐオーバーレイ */
+        #drag-blocker {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            cursor: default;
+        }
+        #drag-blocker.active { display: block; }
+
+        /* デスクトップアイコン */
+        #desktop-icons {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+        }
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 80px;
+            padding: 12px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background var(--transition), transform var(--transition);
+            border: 1px solid transparent;
+        }
+        .desktop-icon:hover {
+            background: var(--icon-hover);
+            border-color: var(--win-border);
+            transform: translateY(-2px);
+        }
+        .desktop-icon:active { transform: scale(0.95); }
+        .desktop-icon .icon-emoji {
+            font-size: 32px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+        }
+        .desktop-icon .icon-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            line-height: 1.3;
+        }
+
+        /* ==============================
+           タスクバー
+        ============================== */
+        #taskbar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 48px;
+            background: var(--taskbar-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(233, 30, 99, 0.15);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+            z-index: 8000;
+        }
+        #tb-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 800;
+            font-size: 13px;
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            color: #fff;
+            cursor: default;
+            flex-shrink: 0;
+        }
+        #tb-logo span { font-size: 16px; }
+        #tb-windows {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        #tb-windows::-webkit-scrollbar { display: none; }
+        .tb-win-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all var(--transition);
+            max-width: 160px;
+        }
+        .tb-win-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+        .tb-win-btn.active {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--text);
+        }
+        .tb-win-btn.minimized { opacity: 0.55; }
+        .tb-win-btn .tb-icon { font-size: 14px; }
+        .tb-win-btn .tb-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100px;
+        }
+        #tb-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .tb-icon-btn {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+        }
+        .tb-icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+        #tb-clock {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            min-width: 50px;
+            text-align: right;
+        }
+        #tb-user {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+        }
+        .tb-logout-btn {
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            background: rgba(255, 80, 80, 0.08);
+            color: rgba(255, 120, 120, 0.8);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all var(--transition);
+        }
+        .tb-logout-btn:hover {
+            background: rgba(255, 80, 80, 0.2);
+            color: #ff8080;
+            border-color: rgba(255, 100, 100, 0.5);
+        }
+
+        /* ==============================
+           ウィンドウ
+        ============================== */
+        .os-window {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius);
+            border: 1px solid var(--win-border);
+            box-shadow: var(--win-shadow);
+            overflow: hidden;
+            min-width: 320px;
+            min-height: 200px;
+            transition: box-shadow 0.15s, border-color 0.15s;
+            animation: winOpen 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes winOpen {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .os-window.focused {
+            box-shadow: var(--win-active-shadow);
+            border-color: rgba(233, 30, 99, 0.4);
+        }
+        .os-window.maximized {
+            border-radius: 0 !important;
+            border: none !important;
+        }
+        .os-window.minimized { display: none; }
+
+        .win-header {
+            height: 38px;
+            background: var(--win-header);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 10px;
+            cursor: move;
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .win-controls {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .win-btn {
+            width: 13px; height: 13px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: filter var(--transition), transform var(--transition);
+            flex-shrink: 0;
+        }
+        .win-btn:hover { filter: brightness(1.2); transform: scale(1.15); }
+        .win-btn.close { background: var(--btn-close); }
+        .win-btn.minimize { background: var(--btn-min); }
+        .win-btn.maximize { background: var(--btn-max); }
+        .win-title {
+            flex: 1;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .win-iframe {
+            flex: 1;
+            border: none;
+            background: var(--win-body);
+            display: block;
+            width: 100%;
+        }
+        .win-resize {
+            position: absolute;
+            right: 0; bottom: 0;
+            width: 18px; height: 18px;
+            cursor: se-resize;
+        }
+        .win-resize::after {
+            content: '';
+            position: absolute;
+            right: 4px; bottom: 4px;
+            width: 8px; height: 8px;
+            border-right: 2px solid rgba(255,255,255,0.2);
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* ==============================
+           ローディング / トースト
+        ============================== */
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0c0a14;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.4s;
+        }
+        #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+        .loading-logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .loading-text {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e91e63, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .loading-sub {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(30, 26, 48, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 100px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            backdrop-filter: blur(16px);
+            z-index: 99998;
+            opacity: 0;
+            transition: all 0.25s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<!-- ローディング -->
+<div id="loading-overlay">
+    <div class="loading-logo">🌸</div>
+    <div class="loading-text">SAKURA OS</div>
+    <div class="loading-sub">Loading...</div>
+</div>
+
+<!-- デスクトップ -->
+<div id="desktop">
+    <div id="desktop-wallpaper"></div>
+    <div id="windows-container"></div>
+    <div id="desktop-icons"></div>
+</div>
+
+<!-- ドラッグブロッカー -->
+<div id="drag-blocker"></div>
+
+<!-- タスクバー -->
+<div id="taskbar">
+    <div id="tb-logo"><span>🌸</span> SAKURA OS</div>
+    <div id="tb-windows"></div>
+    <div id="tb-right">
+        <button class="tb-icon-btn" id="theme-btn" onclick="toggleTheme()" title="テーマ切り替え">🌙</button>
+        <span id="tb-clock">--:--</span>
+        <span id="tb-user">---</span>
+        <button class="tb-logout-btn" onclick="doLogout()">ログアウト</button>
+    </div>
+</div>
+
+<!-- トースト -->
+<div id="toast"></div>
+
+<script>
+// ======================================================================
+// アプリ定義
+// ======================================================================
+const APPS = [
+    { id: 'customer',  name: '顧客管理',     icon: '📋', url: '/system/ordersystem.html',          w: 1200, h: 720 },
+    { id: 'hikari',    name: '申込み管理',   icon: '📝', url: '/system/sakuranethikari.html',       w: 1100, h: 680 },
+    { id: 'usage',     name: '利用明細',     icon: '📊', url: '/system/usagelog.html',              w: 1050, h: 660 },
+    { id: 'call',      name: '通話明細',     icon: '📞', url: '/system/calllog.html',               w: 1050, h: 660 },
+    { id: 'ai',        name: 'SAKURA AI',    icon: '🤖', url: '/system/sakura-ai/',                 w: 960,  h: 700 },
+    { id: 'music',     name: 'SAKURA MUSIC', icon: '🎵', url: '/system/sakuramusic/music.html',     w: 820,  h: 580 },
+    { id: 'groupware', name: 'グループウェア', icon: '🏢', url: '/system/groupware.html',           w: 1400, h: 820 },
+];
+
+// ======================================================================
+// 状態管理
+// ======================================================================
+let zCounter = 100;
+let currentUser = '---';
+let activeWindowId = null;
+// 保存済みウィンドウ位置（最大化前）
+const savedPos = {};
+
+// ======================================================================
+// 初期化
+// ======================================================================
+async function init() {
+    // テーマ復元
+    const savedTheme = localStorage.getItem('sakura_os_theme') || 'dark';
+    setTheme(savedTheme);
+
+    // セッション確認（gw_api.php 経由）
+    try {
+        const res = await fetch('gw_api.php?module=user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'me' })
+        });
+        const data = await res.json();
+        if (data.user && data.user.id) {
+            currentUser = data.user.name || data.user.id;
+        } else {
+            // 未認証 → index.php へリダイレクト
+            location.href = 'index.php';
+            return;
+        }
+    } catch (e) {
+        // APIエラーでも index.php へ
+        location.href = 'index.php';
+        return;
+    }
+
+    // UI 初期化
+    document.getElementById('tb-user').textContent = currentUser;
+    renderDesktopIcons();
+    startClock();
+    hideLoading();
+}
+
+// ======================================================================
+// ローディング
+// ======================================================================
+function hideLoading() {
+    const el = document.getElementById('loading-overlay');
+    el.classList.add('hidden');
+    setTimeout(() => el.remove(), 500);
+}
+
+// ======================================================================
+// デスクトップアイコン
+// ======================================================================
+function renderDesktopIcons() {
+    const container = document.getElementById('desktop-icons');
+    container.innerHTML = '';
+    APPS.forEach(app => {
+        const el = document.createElement('div');
+        el.className = 'desktop-icon';
+        el.title = app.name;
+        el.innerHTML = `
+            <div class="icon-emoji">${app.icon}</div>
+            <div class="icon-label">${app.name}</div>
+        `;
+        el.addEventListener('dblclick', () => openApp(app));
+        el.addEventListener('click', () => openApp(app));
+        container.appendChild(el);
+    });
+}
+
+// ======================================================================
+// ウィンドウ管理
+// ======================================================================
+function openApp(app) {
+    const winId = 'win-' + app.id;
+    const existing = document.getElementById(winId);
+    if (existing) {
+        if (existing.classList.contains('minimized')) {
+            existing.classList.remove('minimized');
+        }
+        bringToFront(winId);
+        updateTaskbar();
+        return;
+    }
+
+    // 少しずらして新ウィンドウを配置
+    const offset = (Object.keys(savedPos).length % 8) * 24;
+    const left = Math.max(100, Math.min(offset + 80, window.innerWidth - app.w - 20));
+    const top = Math.max(20, Math.min(offset + 40, window.innerHeight - app.h - 68));
+
+    const win = document.createElement('div');
+    win.className = 'os-window';
+    win.id = winId;
+    win.style.cssText = `left:${left}px; top:${top}px; width:${app.w}px; height:${app.h}px; z-index:${++zCounter};`;
+    win.innerHTML = `
+        <div class="win-header" id="hdr-${app.id}">
+            <div class="win-controls">
+                <button class="win-btn close"    title="閉じる"    onclick="closeWin('${app.id}')"></button>
+                <button class="win-btn minimize" title="最小化"    onclick="minimizeWin('${app.id}')"></button>
+                <button class="win-btn maximize" title="最大化"    onclick="maximizeWin('${app.id}')"></button>
+            </div>
+            <div class="win-title">${app.icon} ${app.name}</div>
+        </div>
+        <iframe class="win-iframe" src="${app.url}"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals"
+            loading="lazy"></iframe>
+        <div class="win-resize" id="rsz-${app.id}"></div>
+    `;
+
+    document.getElementById('windows-container').appendChild(win);
+    savedPos[app.id] = null;
+
+    setupDrag(app.id);
+    setupResize(app.id);
+    bringToFront(winId);
+    updateTaskbar();
+}
+
+function closeWin(id) {
+    const win = document.getElementById('win-' + id);
+    if (!win) return;
+    win.style.animation = 'none';
+    win.style.transition = 'opacity 0.15s, transform 0.15s';
+    win.style.opacity = '0';
+    win.style.transform = 'scale(0.92)';
+    setTimeout(() => {
+        win.remove();
+        delete savedPos[id];
+        updateTaskbar();
+    }, 150);
+}
+
+function minimizeWin(id) {
+    const win = document.getElementById('win-' + id);
+    if (!win) return;
+    win.classList.add('minimized');
+    if (activeWindowId === 'win-' + id) activeWindowId = null;
+    updateTaskbar();
+}
+
+function maximizeWin(id) {
+    const win = document.getElementById('win-' + id);
+    if (!win) return;
+    if (win.classList.contains('maximized')) {
+        // 最大化解除
+        win.classList.remove('maximized');
+        const pos = savedPos[id];
+        if (pos) {
+            win.style.left   = pos.left;
+            win.style.top    = pos.top;
+            win.style.width  = pos.width;
+            win.style.height = pos.height;
+        }
+    } else {
+        // 最大化
+        savedPos[id] = {
+            left:   win.style.left,
+            top:    win.style.top,
+            width:  win.style.width,
+            height: win.style.height,
+        };
+        win.classList.add('maximized');
+        win.style.left   = '0';
+        win.style.top    = '0';
+        win.style.width  = '100vw';
+        win.style.height = 'calc(100vh - 48px)';
+    }
+}
+
+function bringToFront(winId) {
+    const win = document.getElementById(winId);
+    if (!win) return;
+    win.style.zIndex = ++zCounter;
+    document.querySelectorAll('.os-window').forEach(w => w.classList.remove('focused'));
+    win.classList.add('focused');
+    activeWindowId = winId;
+    updateTaskbar();
+}
+
+// ======================================================================
+// ドラッグ
+// ======================================================================
+function setupDrag(id) {
+    const header = document.getElementById('hdr-' + id);
+    const win    = document.getElementById('win-' + id);
+    if (!header || !win) return;
+    header.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('win-btn')) return;
+        if (win.classList.contains('maximized')) return;
+        bringToFront('win-' + id);
+        const startX = e.clientX - win.offsetLeft;
+        const startY = e.clientY - win.offsetTop;
+        document.getElementById('drag-blocker').classList.add('active');
+        const onMove = ev => {
+            win.style.left = (ev.clientX - startX) + 'px';
+            win.style.top  = Math.max(0, ev.clientY - startY) + 'px';
+        };
+        const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.getElementById('drag-blocker').classList.remove('active');
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    });
+}
+
+// ======================================================================
+// リサイズ
+// ======================================================================
+function setupResize(id) {
+    const handle = document.getElementById('rsz-' + id);
+    const win    = document.getElementById('win-' + id);
+    if (!handle || !win) return;
+    handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        if (win.classList.contains('maximized')) return;
+        bringToFront('win-' + id);
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startW = win.offsetWidth;
+        const startH = win.offsetHeight;
+        document.getElementById('drag-blocker').classList.add('active');
+        const onMove = ev => {
+            win.style.width  = Math.max(320, startW + ev.clientX - startX) + 'px';
+            win.style.height = Math.max(200, startH + ev.clientY - startY) + 'px';
+        };
+        const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.getElementById('drag-blocker').classList.remove('active');
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    });
+}
+
+// ウィンドウクリックで前面へ
+document.getElementById('windows-container').addEventListener('mousedown', e => {
+    const win = e.target.closest('.os-window');
+    if (win) bringToFront(win.id);
+});
+
+// ======================================================================
+// タスクバー更新
+// ======================================================================
+function updateTaskbar() {
+    const container = document.getElementById('tb-windows');
+    container.innerHTML = '';
+    document.querySelectorAll('.os-window').forEach(win => {
+        const id = win.id.replace('win-', '');
+        const app = APPS.find(a => a.id === id);
+        if (!app) return;
+        const btn = document.createElement('button');
+        btn.className = 'tb-win-btn';
+        if (win.classList.contains('minimized')) btn.classList.add('minimized');
+        if (win.id === activeWindowId)           btn.classList.add('active');
+        btn.innerHTML = `<span class="tb-icon">${app.icon}</span><span class="tb-label">${app.name}</span>`;
+        btn.addEventListener('click', () => {
+            if (win.classList.contains('minimized')) {
+                win.classList.remove('minimized');
+                bringToFront(win.id);
+            } else if (win.id === activeWindowId) {
+                minimizeWin(id);
+            } else {
+                bringToFront(win.id);
+            }
+        });
+        container.appendChild(btn);
+    });
+}
+
+// ======================================================================
+// 時計
+// ======================================================================
+function startClock() {
+    function update() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('tb-clock').textContent = h + ':' + m;
+    }
+    update();
+    setInterval(update, 10000);
+}
+
+// ======================================================================
+// テーマ
+// ======================================================================
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-btn').textContent = theme === 'dark' ? '🌙' : '☀️';
+    localStorage.setItem('sakura_os_theme', theme);
+}
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+    showToast(current === 'dark' ? '☀️ ライトモード' : '🌙 ダークモード');
+}
+
+// ======================================================================
+// ログアウト
+// ======================================================================
+function doLogout() {
+    location.href = 'index.php?logout=1';
+}
+
+// ======================================================================
+// トースト
+// ======================================================================
+let toastTimer = null;
+function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ======================================================================
+// 起動
+// ======================================================================
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
