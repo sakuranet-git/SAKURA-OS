@@ -31,18 +31,50 @@
             --tr: 0.2s cubic-bezier(0.4,0,0.2,1);
         }
         [data-theme="light"] {
-            --panel-bg: rgba(240,238,252,0.88);
-            --panel-border: rgba(0,0,0,0.1);
-            --taskbar-bg: rgba(248,246,255,0.97);
-            --win-header: rgba(238,236,252,0.98);
+            --panel-bg: rgba(255,255,255,0.72);
+            --panel-border: rgba(0,0,0,0.08);
+            --taskbar-bg: rgba(255,255,255,0.92);
+            --win-header: rgba(250,249,255,0.98);
             --win-body: rgba(255,255,255,0.98);
-            --win-border: rgba(233,30,99,0.2);
-            --win-shadow: 0 24px 64px rgba(0,0,0,0.15), 0 0 0 1px rgba(233,30,99,0.15);
-            --win-active-shadow: 0 28px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(233,30,99,0.35);
-            --text: #1a1a2e;
-            --text-dim: rgba(26,26,46,0.65);
-            --text-muted: rgba(26,26,46,0.38);
+            --win-border: rgba(233,30,99,0.25);
+            --win-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(233,30,99,0.12);
+            --win-active-shadow: 0 16px 48px rgba(0,0,0,0.18), 0 0 0 1px rgba(233,30,99,0.35);
+            --text: #18162a;
+            --text-dim: rgba(24,22,42,0.72);
+            --text-muted: rgba(24,22,42,0.42);
+            --accent-glow: rgba(233,30,99,0.15);
         }
+        [data-theme="light"] #desktop-wallpaper {
+            background: linear-gradient(135deg,#f8f0ff 0%,#fce4ec 40%,#e8eaf6 100%) !important;
+        }
+        [data-theme="light"] #news-ticker {
+            background: rgba(200,10,40,0.82);
+        }
+        [data-theme="light"] .tb-icon-btn {
+            background: rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.12);
+            color: #18162a;
+        }
+        [data-theme="light"] .tb-icon-btn:hover {
+            background: rgba(233,30,99,0.1);
+            color: var(--accent);
+        }
+        [data-theme="light"] .tb-win-btn {
+            background: rgba(0,0,0,0.05);
+            border-color: rgba(0,0,0,0.1);
+            color: var(--text-dim);
+        }
+        [data-theme="light"] .tb-win-btn:hover { background:rgba(233,30,99,0.08); color:var(--text); }
+        [data-theme="light"] .tb-win-btn.active { background:rgba(233,30,99,0.15); border-color:var(--accent); }
+        [data-theme="light"] .lp-app-item:hover { background:rgba(233,30,99,0.08); }
+        [data-theme="light"] .currency-card, [data-theme="light"] .news-card {
+            background: rgba(255,255,255,0.82);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .news-card:hover { border-color:rgba(233,30,99,0.3); box-shadow:0 4px 20px rgba(233,30,99,0.1); }
+        [data-theme="light"] #tb-user { background:rgba(0,0,0,0.05); border-color:rgba(0,0,0,0.1); }
+        [data-theme="light"] .tb-logout { border-color:rgba(200,30,60,0.3); background:rgba(200,30,60,0.06); color:rgba(180,20,50,0.9); }
+        [data-theme="light"] #wallpaper-panel { background:rgba(255,255,255,0.97); }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { width:100%; height:100%; overflow:hidden; font-family:'Outfit','Noto Sans JP',sans-serif; }
         body { user-select:none; -webkit-user-select:none; color: var(--text); }
@@ -212,8 +244,8 @@
         .tb-win-btn .tb-icon { font-size:14px; }
         .tb-win-btn .tb-label { overflow:hidden; text-overflow:ellipsis; max-width:100px; }
         #tb-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
-        .tb-icon-btn { width:32px; height:32px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.05); color:var(--text-dim); cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; transition:all var(--tr); }
-        .tb-icon-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
+        .tb-icon-btn { width:34px; height:34px; border-radius:8px; border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.09); color:rgba(255,255,255,0.85); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:all var(--tr); }
+        .tb-icon-btn:hover { background:rgba(233,30,99,0.25); border-color:rgba(233,30,99,0.5); color:#fff; }
         #tb-clock { font-size:12px; font-weight:600; color:var(--text-dim); min-width:50px; text-align:right; }
         #tb-user { font-size:12px; font-weight:600; color:var(--text-dim); padding:4px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); }
         .tb-logout { padding:5px 12px; border-radius:8px; border:1px solid rgba(255,100,100,0.3); background:rgba(255,80,80,0.08); color:rgba(255,120,120,0.8); cursor:pointer; font-size:12px; font-family:inherit; font-weight:600; transition:all var(--tr); }
