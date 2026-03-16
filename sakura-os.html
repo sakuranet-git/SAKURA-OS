@@ -267,10 +267,25 @@
         .wp-swatch:hover { border-color:rgba(255,255,255,0.6); transform:scale(1.05); box-shadow:0 4px 14px rgba(0,0,0,0.6); }
         .wp-swatch.active { border-color:var(--accent); box-shadow:0 0 0 3px rgba(233,30,99,0.35), 0 2px 8px rgba(0,0,0,0.5); }
         .wp-swatch-lbl { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.6); font-size:9px; font-weight:600; color:#fff; text-align:center; padding:3px; }
-        .wp-upload { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-        .wp-upload-btn { padding:7px 14px; border-radius:8px; background:rgba(255,255,255,0.07); border:1px solid var(--panel-border); color:var(--text-dim); cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; transition:all var(--tr); white-space:nowrap; }
-        .wp-upload-btn:hover { background:rgba(255,255,255,0.14); color:var(--text); }
+        .wp-upload { margin-bottom:10px; }
+        .wp-drop-zone {
+            border:2px dashed rgba(255,255,255,0.22); border-radius:10px;
+            padding:14px 10px; text-align:center; cursor:pointer;
+            transition:border-color var(--tr), background var(--tr);
+            position:relative;
+        }
+        .wp-drop-zone:hover, .wp-drop-zone.drag-over {
+            border-color:var(--accent); background:rgba(233,30,99,0.08);
+        }
+        .wp-drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+        .wp-drop-label { font-size:12px; color:var(--text-dim); pointer-events:none; }
+        .wp-drop-label span { display:block; font-size:20px; margin-bottom:4px; }
+        .wp-drop-file-row { display:flex; align-items:center; gap:6px; margin-top:8px; }
         .wp-file-name { font-size:11px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+        .wp-del-btn { padding:4px 10px; border-radius:6px; background:rgba(255,80,80,0.12); border:1px solid rgba(255,80,80,0.25); color:rgba(255,130,130,0.9); font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; transition:all var(--tr); white-space:nowrap; }
+        .wp-del-btn:hover { background:rgba(255,80,80,0.28); color:#fff; }
+        .wp-del-btn { display:none; }
+        .wp-del-btn.show { display:inline-block; }
         .wp-custom { display:flex; gap:8px; }
         .wp-custom input { flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.05); color:var(--text); font-size:12px; font-family:inherit; outline:none; user-select:text; -webkit-user-select:text; }
         .wp-custom input:focus { border-color:var(--accent); }
@@ -387,11 +402,17 @@
     </div>
     <div class="wp-grid" id="wp-grid"></div>
     <div class="wp-upload">
-        <label class="wp-upload-btn">
-            📁 画像ファイル
-            <input type="file" accept="image/*" id="wp-file" style="display:none" onchange="applyFileWp(this)">
-        </label>
-        <span id="wp-file-name" class="wp-file-name">ファイルを選択してください</span>
+        <div class="wp-drop-zone" id="wp-drop-zone">
+            <input type="file" accept="image/*" id="wp-file" onchange="applyFileWp(this)">
+            <div class="wp-drop-label">
+                <span>🖼️</span>
+                クリックまたはここに画像をドロップ
+            </div>
+        </div>
+        <div class="wp-drop-file-row">
+            <span id="wp-file-name" class="wp-file-name">ファイルを選択してください</span>
+            <button class="wp-del-btn" id="wp-del-btn" onclick="deleteUploadedWp()">🗑️ 削除</button>
+        </div>
     </div>
     <div class="wp-custom">
         <input type="text" id="wp-url" placeholder="画像URL または CSSグラデーション">
@@ -437,7 +458,19 @@ async function init() {
 
     const savedWp = localStorage.getItem('sakura_os_wp');
     if (savedWp) {
-        try { const w = JSON.parse(savedWp); applyWp(w.bg, w.id); }
+        try {
+            const w = JSON.parse(savedWp);
+            applyWp(w.bg, w.id);
+            if (w.id === 'upload') {
+                // ページロード後に削除ボタンを表示
+                setTimeout(() => {
+                    const btn = document.getElementById('wp-del-btn');
+                    const nm  = document.getElementById('wp-file-name');
+                    if (btn) btn.classList.add('show');
+                    if (nm)  nm.textContent = '保存済み壁紙';
+                }, 0);
+            }
+        }
         catch { applyWp(WALLPAPERS[0].bg, WALLPAPERS[0].id); }
     } else {
         applyWp(WALLPAPERS[0].bg, WALLPAPERS[0].id);
@@ -827,12 +860,50 @@ function applyFileWp(input) {
     reader.onload = e => {
         applyWp(e.target.result, 'upload');
         document.getElementById('wp-file-name').textContent = file.name;
+        document.getElementById('wp-del-btn').classList.add('show');
         showToast('🖼️ 壁紙をアップロードしました');
     };
     reader.readAsDataURL(file);
-    // リセットして同ファイルを再選択可能にする
     input.value = '';
 }
+
+function deleteUploadedWp() {
+    try { localStorage.removeItem('sakura_os_wp'); } catch {}
+    // デフォルト壁紙に戻す
+    const el = document.getElementById('desktop-wallpaper');
+    el.style.cssText = 'transition:background 0.6s ease;';
+    currentWpId = 'default';
+    document.querySelectorAll('.wp-swatch').forEach(s => s.classList.remove('active'));
+    const def = document.getElementById('wps-default');
+    if (def) def.classList.add('active');
+    document.getElementById('wp-file-name').textContent = 'ファイルを選択してください';
+    document.getElementById('wp-del-btn').classList.remove('show');
+    showToast('🗑️ アップロード壁紙を削除しました');
+}
+
+// ── D&D壁紙 ──
+(function initWpDrop() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const zone = document.getElementById('wp-drop-zone');
+        if (!zone) return;
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (!file || !file.type.startsWith('image/')) { showToast('⚠️ 画像ファイルを指定してください'); return; }
+            const reader = new FileReader();
+            reader.onload = ev => {
+                applyWp(ev.target.result, 'upload');
+                document.getElementById('wp-file-name').textContent = file.name;
+                document.getElementById('wp-del-btn').classList.add('show');
+                showToast('🖼️ 壁紙をアップロードしました');
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+})();
 function toggleWpPanel() { document.getElementById('wallpaper-panel').classList.toggle('open'); }
 function closeWpPanel()  { document.getElementById('wallpaper-panel').classList.remove('open'); }
 
