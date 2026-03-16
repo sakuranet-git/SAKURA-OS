@@ -292,6 +292,18 @@
         .wp-custom input::placeholder { color:var(--text-muted); }
         .wp-apply { padding:8px 14px; border-radius:8px; background:var(--accent); color:#fff; border:none; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:filter var(--tr); }
         .wp-apply:hover { filter:brightness(1.15); }
+        .wp-slide-row { display:flex; align-items:center; gap:10px; margin-top:12px; padding-top:10px; border-top:1px solid var(--panel-border); }
+        .wp-slide-toggle { display:flex; align-items:center; gap:6px; cursor:pointer; flex:1; font-size:12px; color:var(--text-dim); user-select:none; }
+        .wp-slide-toggle input[type=checkbox] { display:none; }
+        .wp-slide-knob { width:36px; height:20px; border-radius:10px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); position:relative; transition:background var(--tr); flex-shrink:0; }
+        .wp-slide-knob::after { content:''; position:absolute; top:3px; left:3px; width:12px; height:12px; border-radius:50%; background:#fff; transition:transform var(--tr), background var(--tr); }
+        .wp-slide-toggle input:checked ~ .wp-slide-knob { background:var(--accent); border-color:var(--accent); }
+        .wp-slide-toggle input:checked ~ .wp-slide-knob::after { transform:translateX(16px); }
+        .wp-slide-select { padding:5px 8px; border-radius:7px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.06); color:var(--text); font-size:11px; font-family:inherit; outline:none; cursor:pointer; }
+        .wp-slide-select:focus { border-color:var(--accent); }
+        .wp-slide-indicator { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); flex-shrink:0; transition:background 0.4s; }
+        .wp-slide-indicator.active { background:var(--accent); box-shadow:0 0 6px var(--accent); animation:pulse-dot 1.4s infinite; }
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
         /* ── Loading ── */
         #loading-overlay { position:fixed; inset:0; background:#0c0a14; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:99999; transition:opacity 0.4s; }
@@ -418,6 +430,22 @@
         <input type="text" id="wp-url" placeholder="画像URL または CSSグラデーション">
         <button class="wp-apply" onclick="applyCustomWp()">適用</button>
     </div>
+    <div class="wp-slide-row">
+        <label class="wp-slide-toggle">
+            <input type="checkbox" id="wp-slide-on" onchange="toggleSlideshow(this.checked)">
+            <span class="wp-slide-knob"></span>
+            🔄 スライドショー
+        </label>
+        <select id="wp-slide-sec" class="wp-slide-select" onchange="setSlideshowInterval(+this.value)">
+            <option value="10">10秒</option>
+            <option value="30" selected>30秒</option>
+            <option value="60">1分</option>
+            <option value="180">3分</option>
+            <option value="300">5分</option>
+            <option value="600">10分</option>
+        </select>
+        <span class="wp-slide-indicator" id="wp-slide-indicator"></span>
+    </div>
 </div>
 
 <div id="toast"></div>
@@ -450,6 +478,7 @@ const WALLPAPERS = [
 let zCounter = 100, currentUser = '---', activeWindowId = null;
 const savedPos = {};
 let currentWpId = 'sakura-dark';
+let wpTimer = null, wpSlideIdx = 0, wpSlideshowOn = false, wpSlideshowSec = 30;
 
 // ── Init ──
 async function init() {
@@ -496,6 +525,7 @@ async function init() {
     fetchWeather();
     fetchNews();
     fetchCurrency();
+    loadSlideSettings();
     hideLoading();
 }
 
@@ -831,12 +861,27 @@ function renderWpGrid() {
     });
 }
 
-function applyWp(bg, id) {
+function applyWp(bg, id, fade) {
     const el = document.getElementById('desktop-wallpaper');
-    if (bg.startsWith('http') || bg.startsWith('data:') || bg.match(/^(\/|\.)/)) {
-        el.style.cssText = `background:url(${bg}) center/cover no-repeat; transition:background 0.6s;`;
+    const doApply = () => {
+        if (bg.startsWith('http') || bg.startsWith('data:') || bg.match(/^(\/|\.)/)) {
+            el.style.background = `url(${bg}) center/cover no-repeat`;
+        } else {
+            el.style.background = bg;
+            el.style.backgroundSize = 'cover';
+        }
+        if (fade) {
+            el.style.opacity = '1';
+        }
+    };
+    if (fade) {
+        el.style.transition = 'opacity 0.8s ease';
+        el.style.opacity = '0';
+        setTimeout(doApply, 800);
     } else {
-        el.style.cssText = `background:${bg}; background-size:cover; transition:background 0.6s;`;
+        el.style.transition = 'background 0.6s ease';
+        el.style.opacity = '1';
+        doApply();
     }
     currentWpId = id || 'custom';
     try { localStorage.setItem('sakura_os_wp', JSON.stringify({ bg, id: currentWpId })); } catch { /* storage full */ }
@@ -906,6 +951,60 @@ function deleteUploadedWp() {
 })();
 function toggleWpPanel() { document.getElementById('wallpaper-panel').classList.toggle('open'); }
 function closeWpPanel()  { document.getElementById('wallpaper-panel').classList.remove('open'); }
+
+// ── スライドショー（SAKURA AIと同ロジック）──
+function startSlideshow() {
+    if (wpTimer) clearInterval(wpTimer);
+    // プリセット壁紙のみ対象（upload/customは除外）
+    const presets = WALLPAPERS.filter(w => w.id !== 'upload');
+    if (presets.length === 0) return;
+    // 現在のインデックスを合わせる
+    const cur = presets.findIndex(w => w.id === currentWpId);
+    wpSlideIdx = cur >= 0 ? (cur + 1) % presets.length : 0;
+    const cycle = () => {
+        const wp = presets[wpSlideIdx];
+        applyWp(wp.bg, wp.id, true); // フェード付き
+        wpSlideIdx = (wpSlideIdx + 1) % presets.length;
+    };
+    wpTimer = setInterval(cycle, wpSlideshowSec * 1000);
+    document.getElementById('wp-slide-indicator').classList.add('active');
+}
+
+function stopSlideshow() {
+    if (wpTimer) { clearInterval(wpTimer); wpTimer = null; }
+    document.getElementById('wp-slide-indicator').classList.remove('active');
+}
+
+function toggleSlideshow(on) {
+    wpSlideshowOn = on;
+    saveSlideSettings();
+    if (on) { startSlideshow(); showToast('🔄 スライドショー開始'); }
+    else    { stopSlideshow();  showToast('⏹️ スライドショー停止'); }
+}
+
+function setSlideshowInterval(sec) {
+    wpSlideshowSec = sec;
+    saveSlideSettings();
+    if (wpSlideshowOn) startSlideshow(); // 再起動して間隔反映
+}
+
+function saveSlideSettings() {
+    try { localStorage.setItem('sakura_os_slide', JSON.stringify({ on: wpSlideshowOn, sec: wpSlideshowSec })); } catch {}
+}
+
+function loadSlideSettings() {
+    try {
+        const s = JSON.parse(localStorage.getItem('sakura_os_slide') || 'null');
+        if (!s) return;
+        wpSlideshowOn = s.on || false;
+        wpSlideshowSec = s.sec || 30;
+        const cb  = document.getElementById('wp-slide-on');
+        const sel = document.getElementById('wp-slide-sec');
+        if (cb)  cb.checked = wpSlideshowOn;
+        if (sel) sel.value  = wpSlideshowSec;
+        if (wpSlideshowOn) startSlideshow();
+    } catch {}
+}
 
 // ── Theme ──
 function setTheme(t) {
