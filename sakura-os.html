@@ -1229,15 +1229,12 @@ function dcalMove(dir) {
     renderDesktopCalendar();
 }
 
-function initFirestoreCalendar() {
+async function initFirestoreCalendar() {
     try {
-        const firebaseConfig = {
-            apiKey:        'REMOVED_SEE_SERVER',
-            authDomain:    'sakura-net-db.firebaseapp.com',
-            projectId:     'sakura-net-db',
-            storageBucket: 'sakura-net-db.firebasestorage.app',
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const res  = await fetch('gw_api.php?module=config', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+        const data = await res.json();
+        if (!data.firebase) throw new Error('config取得失敗');
+        if (!firebase.apps.length) firebase.initializeApp(data.firebase);
         const db = firebase.firestore();
         db.collection('customer_records').onSnapshot(snap => {
             customerRecords = snap.docs.map(d => d.data());
