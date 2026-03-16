@@ -12,9 +12,9 @@
         :root {
             --accent: #e91e63;
             --accent-glow: rgba(233,30,99,0.3);
-            --panel-bg: rgba(8,6,18,0.82);
-            --panel-border: rgba(255,255,255,0.08);
-            --taskbar-bg: rgba(5,4,12,0.96);
+            --panel-bg: rgba(8,6,18,0.32);
+            --panel-border: rgba(255,255,255,0.12);
+            --taskbar-bg: rgba(5,4,12,0.78);
             --win-header: rgba(18,14,30,0.98);
             --win-body: rgba(10,8,18,0.98);
             --win-border: rgba(233,30,99,0.3);
@@ -119,7 +119,7 @@
         /* ── Left Panel ── */
         #left-panel {
             position:fixed; left:0; top:32px; bottom:48px; width:272px; z-index:50;
-            background:var(--panel-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+            background:rgba(8,6,18,0.52); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
             border-right:1px solid var(--panel-border);
             display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden;
             scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.08) transparent;
@@ -181,21 +181,19 @@
 
         .news-grid {
             position:absolute; top:104px; left:14px; right:14px; bottom:14px;
-            display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(4,1fr); gap:10px; z-index:11;
-            overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.08) transparent;
+            display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:10px; z-index:11;
         }
         .news-card {
             background:var(--panel-bg); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-            border:1px solid var(--panel-border); border-radius:var(--radius); padding:14px 16px;
-            display:flex; flex-direction:column; gap:5px; overflow:hidden; cursor:pointer;
-            transition:border-color var(--tr), transform var(--tr);
-            user-select: text; -webkit-user-select: text;
+            border:1px solid var(--panel-border); border-radius:var(--radius); padding:12px 14px;
+            display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; cursor:pointer;
+            transition:border-color var(--tr), background var(--tr), transform var(--tr);
+            user-select:text; -webkit-user-select:text;
         }
-        .news-card:hover { border-color:rgba(255,255,255,0.2); transform:translateY(-2px); }
-        .news-src { font-size:10px; font-weight:700; color:#f06292; }
-        .news-title { font-size:13px; font-weight:700; color:var(--text); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .news-desc { font-size:11px; color:var(--text-dim); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; flex:1; }
-        .news-time { font-size:10px; color:var(--text-muted); margin-top:auto; }
+        .news-card:hover { border-color:rgba(233,30,99,0.4); background:rgba(233,30,99,0.06); transform:translateY(-2px); }
+        .news-src { font-size:10px; font-weight:700; color:#f06292; letter-spacing:0.3px; margin-bottom:6px; }
+        .news-title { font-size:12px; font-weight:600; color:var(--text); line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; }
+        .news-time { font-size:10px; color:var(--text-muted); margin-top:8px; }
 
         /* ── Windows ── */
         #windows-container { position:fixed; left:0; top:32px; right:0; bottom:48px; z-index:100; pointer-events:none; }
@@ -254,7 +252,7 @@
         /* ── Wallpaper Panel ── */
         #wallpaper-panel {
             position:fixed; bottom:48px; right:0; width:370px;
-            background:rgba(8,6,18,0.97); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+            background:rgba(8,6,18,0.70); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px);
             border:1px solid var(--panel-border); border-bottom:none; border-radius:14px 14px 0 0;
             padding:16px; z-index:9500; transform:translateY(100%);
             transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -264,9 +262,9 @@
         .wp-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:13px; font-weight:700; color:var(--text); }
         .wp-x { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px; padding:2px; }
         .wp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
-        .wp-swatch { height:58px; border-radius:9px; cursor:pointer; border:2px solid transparent; transition:border-color var(--tr), transform var(--tr); position:relative; overflow:hidden; background-size:cover; background-position:center; }
-        .wp-swatch:hover { border-color:rgba(255,255,255,0.4); transform:scale(1.04); }
-        .wp-swatch.active { border-color:var(--accent); }
+        .wp-swatch { height:58px; border-radius:9px; cursor:pointer; border:2px solid rgba(255,255,255,0.18); box-shadow:0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); transition:border-color var(--tr), transform var(--tr), box-shadow var(--tr); position:relative; overflow:hidden; background-size:cover; background-position:center; }
+        .wp-swatch:hover { border-color:rgba(255,255,255,0.6); transform:scale(1.05); box-shadow:0 4px 14px rgba(0,0,0,0.6); }
+        .wp-swatch.active { border-color:var(--accent); box-shadow:0 0 0 3px rgba(233,30,99,0.35), 0 2px 8px rgba(0,0,0,0.5); }
         .wp-swatch-lbl { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.6); font-size:9px; font-weight:600; color:#fff; text-align:center; padding:3px; }
         .wp-upload { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
         .wp-upload-btn { padding:7px 14px; border-radius:8px; background:rgba(255,255,255,0.07); border:1px solid var(--panel-border); color:var(--text-dim); cursor:pointer; font-size:12px; font-weight:600; font-family:inherit; transition:all var(--tr); white-space:nowrap; }
@@ -556,59 +554,83 @@ async function fetchWeather() {
     }
 }
 
-// ── News (Yahoo! Japan → NHK fallback) ──
+// ── News (Yahoo! Japan — multi-proxy, no NHK fallback) ──
 async function fetchNews() {
-    const SOURCES = [
-        { label:'Yahoo! ニュース', url:'https://news.yahoo.co.jp/rss/topics/top-picks.xml' },
-        { label:'Yahoo! ニュース', url:'https://news.yahoo.co.jp/pickup/rss.xml' },
-        { label:'NHK ニュース',    url:'https://www3.nhk.or.jp/rss/news/cat0.xml' },
+    const YAHOO_URLS = [
+        'https://news.yahoo.co.jp/rss/topics/top-picks.xml',
+        'https://news.yahoo.co.jp/pickup/rss.xml',
+        'https://news.yahoo.co.jp/rss/topics/domestic.xml',
+        'https://news.yahoo.co.jp/rss/topics/world.xml',
     ];
-    let newsItems = [], srcLabel = '';
+    const mkProxy = [
+        u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+        u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+        u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
+    ];
 
-    for (const src of SOURCES) {
+    let newsItems = [];
+
+    // --- Phase 1: rss2json (JSON, no XML parse needed) ---
+    for (const rssUrl of YAHOO_URLS) {
+        if (newsItems.length > 0) break;
         try {
-            // rss2json: CORSフリー・JSON変換API
-            const api = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(src.url);
-            const res  = await fetch(api);
+            const res  = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
             const data = await res.json();
             if (data.status === 'ok' && data.items?.length > 0) {
                 newsItems = data.items.map(it => ({
                     title: it.title || '',
-                    desc:  (it.description || '').replace(/<[^>]+>/g,'').trim(),
                     link:  it.link  || '#',
                     pub:   it.pubDate || '',
                 }));
-                srcLabel = src.label;
-                break;
             }
-        } catch { /* try next source */ }
+        } catch { /* next */ }
     }
 
-    // Ticker (duplicate for seamless loop)
+    // --- Phase 2: raw XML via CORS proxies ---
+    if (newsItems.length === 0) {
+        outer: for (const rssUrl of YAHOO_URLS) {
+            for (const proxy of mkProxy) {
+                try {
+                    const res  = await fetch(proxy(rssUrl));
+                    const txt  = await res.text();
+                    const xml  = new DOMParser().parseFromString(txt, 'text/xml');
+                    if (xml.querySelector('parsererror')) continue;
+                    const found = Array.from(xml.querySelectorAll('item'));
+                    if (found.length > 0) {
+                        newsItems = found.map(it => ({
+                            title: it.querySelector('title')?.textContent || '',
+                            link:  it.querySelector('link')?.textContent  || '#',
+                            pub:   it.querySelector('pubDate')?.textContent || '',
+                        }));
+                        break outer;
+                    }
+                } catch { /* next */ }
+            }
+        }
+    }
+
+    const srcLabel = 'Yahoo! ニュース';
+
+    // Ticker
     const tickerHtml = newsItems.slice(0,10).map(it =>
         `<span class="ticker-item">${it.title}</span>`
     ).join('');
     document.getElementById('ticker-track').innerHTML =
         tickerHtml ? tickerHtml + tickerHtml : '<span class="ticker-item">ニュースを読み込み中...</span>';
 
-    // Cards — ensure 12 tiles
+    // Grid — 9 tiles (3×3)
     const grid = document.getElementById('news-grid');
     grid.innerHTML = '';
-    if (newsItems.length === 0) {
-        for (let i = 0; i < 12; i++) {
-            const c = document.createElement('div');
-            c.className = 'news-card';
-            c.innerHTML = `<div class="news-src">ニュース</div><div class="news-title" style="opacity:.3">取得できませんでした</div>`;
-            grid.appendChild(c);
-        }
-        return;
-    }
-    for (let i = 0; i < 12; i++) {
-        const it   = newsItems[i % newsItems.length];
+    for (let i = 0; i < 9; i++) {
         const card = document.createElement('div');
         card.className = 'news-card';
-        card.innerHTML = `<div class="news-src">${srcLabel}</div><div class="news-title">${it.title}</div><div class="news-desc">${it.desc}</div><div class="news-time">${fmtDate(it.pub)}</div>`;
-        card.addEventListener('click', () => window.open(it.link, '_blank'));
+        if (i < newsItems.length) {
+            const it = newsItems[i];
+            card.innerHTML = `<div class="news-src">${srcLabel}</div><div class="news-title">${it.title}</div><div class="news-time">${fmtDate(it.pub)}</div>`;
+            card.addEventListener('click', () => window.open(it.link, '_blank'));
+        } else {
+            card.innerHTML = `<div class="news-src" style="opacity:.3">---</div>`;
+        }
         grid.appendChild(card);
     }
 }
