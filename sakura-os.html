@@ -226,8 +226,9 @@
             border:1px solid var(--panel-border); border-bottom:none; border-radius:14px 14px 0 0;
             padding:16px; z-index:9500; transform:translateY(100%);
             transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+            pointer-events:none;
         }
-        #wallpaper-panel.open { transform:translateY(0); }
+        #wallpaper-panel.open { transform:translateY(0); pointer-events:auto; }
         .wp-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:13px; font-weight:700; color:var(--text); }
         .wp-x { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px; padding:2px; }
         .wp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
@@ -512,44 +513,59 @@ async function fetchWeather() {
     }
 }
 
-// ── News (NHK RSS via allorigins proxy) ──
+// ── News (Yahoo! Japan RSS via allorigins proxy) ──
 async function fetchNews() {
-    try {
-        const rss = 'https://www3.nhk.or.jp/rss/news/cat0.xml';
-        const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(rss));
-        const xml = new DOMParser().parseFromString(await res.text(), 'text/xml');
-        const items = Array.from(xml.querySelectorAll('item')).slice(0, 12);
+    const RSS_FEEDS = [
+        'https://news.yahoo.co.jp/rss/topics/top-picks.xml',
+        'https://news.yahoo.co.jp/pickup/rss.xml',
+        'https://www3.nhk.or.jp/rss/news/cat0.xml',
+    ];
+    let items = [];
+    for (const rss of RSS_FEEDS) {
+        try {
+            const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(rss));
+            const text = await res.text();
+            const xml = new DOMParser().parseFromString(text, 'text/xml');
+            const found = Array.from(xml.querySelectorAll('item'));
+            if (found.length > 0) { items = found; break; }
+        } catch { /* try next */ }
+    }
 
-        // Ticker (duplicate for seamless loop)
-        const tickerHtml = items.slice(0,8).map(it => {
-            const t = it.querySelector('title')?.textContent || '';
-            return `<span class="ticker-item">${t}</span>`;
-        }).join('');
-        document.getElementById('ticker-track').innerHTML = tickerHtml + tickerHtml;
+    const src = items.length > 0
+        ? (items[0].querySelector('link')?.textContent?.includes('yahoo') ? 'Yahoo! ニュース' : 'NHK ニュース')
+        : 'ニュース';
 
-        // Cards
-        const grid = document.getElementById('news-grid');
-        grid.innerHTML = '';
-        items.slice(0,12).forEach(it => {
-            const title = it.querySelector('title')?.textContent || '';
-            const desc  = (it.querySelector('description')?.textContent || '').replace(/<[^>]+>/g,'').trim();
-            const link  = it.querySelector('link')?.textContent || '#';
-            const pub   = it.querySelector('pubDate')?.textContent || '';
-            const card  = document.createElement('div');
-            card.className = 'news-card';
-            card.innerHTML = `<div class="news-src">NHK ニュース</div><div class="news-title">${title}</div><div class="news-desc">${desc}</div><div class="news-time">${fmtDate(pub)}</div>`;
-            card.addEventListener('click', () => window.open(link,'_blank'));
-            grid.appendChild(card);
-        });
-    } catch {
-        const grid = document.getElementById('news-grid');
-        grid.innerHTML = '';
-        for (let i=0;i<12;i++) {
+    // Ticker (duplicate for seamless loop)
+    const tickerItems = items.slice(0, 10);
+    const tickerHtml = tickerItems.map(it => {
+        const t = it.querySelector('title')?.textContent || '';
+        return `<span class="ticker-item">${t}</span>`;
+    }).join('');
+    document.getElementById('ticker-track').innerHTML = tickerHtml + tickerHtml;
+
+    // Cards — fill up to 12 with available items (repeat if needed)
+    const grid = document.getElementById('news-grid');
+    grid.innerHTML = '';
+    if (items.length === 0) {
+        for (let i = 0; i < 12; i++) {
             const c = document.createElement('div');
             c.className = 'news-card';
             c.innerHTML = `<div class="news-src">ニュース</div><div class="news-title" style="opacity:.3">取得できませんでした</div>`;
             grid.appendChild(c);
         }
+        return;
+    }
+    for (let i = 0; i < 12; i++) {
+        const it    = items[i % items.length];
+        const title = it.querySelector('title')?.textContent || '';
+        const desc  = (it.querySelector('description')?.textContent || '').replace(/<[^>]+>/g,'').trim();
+        const link  = it.querySelector('link')?.textContent || '#';
+        const pub   = it.querySelector('pubDate')?.textContent || '';
+        const card  = document.createElement('div');
+        card.className = 'news-card';
+        card.innerHTML = `<div class="news-src">${src}</div><div class="news-title">${title}</div><div class="news-desc">${desc}</div><div class="news-time">${fmtDate(pub)}</div>`;
+        card.addEventListener('click', () => window.open(link,'_blank'));
+        grid.appendChild(card);
     }
 }
 
