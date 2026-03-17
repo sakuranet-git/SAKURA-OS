@@ -913,6 +913,9 @@ function openApp(app) {
 
 function closeWin(id) {
     const w = document.getElementById('win-'+id); if (!w) return;
+    // iframeをアンロードしてYouTubeバッファ等のメモリを即時解放
+    const iframe = w.querySelector('iframe');
+    if (iframe) { iframe.src = 'about:blank'; }
     w.style.transition = 'opacity .15s, transform .15s';
     w.style.opacity = '0'; w.style.transform = 'scale(0.92)';
     setTimeout(() => { w.remove(); delete savedPos[id]; updateTaskbar(); }, 150);
