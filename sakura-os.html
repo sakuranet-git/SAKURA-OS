@@ -885,7 +885,14 @@ function openApp(app) {
     const wid = 'win-' + app.id;
     const ex  = document.getElementById(wid);
     if (ex) {
-        if (ex.classList.contains('minimized')) ex.classList.remove('minimized');
+        if (ex.classList.contains('minimized')) {
+            ex.classList.remove('minimized');
+            // iframeを復元
+            const iframe = ex.querySelector('iframe');
+            if (iframe && iframe.src.endsWith('about:blank') && ex.dataset.appUrl) {
+                iframe.src = ex.dataset.appUrl;
+            }
+        }
         bringToFront(wid); updateTaskbar(); return;
     }
     const n = Object.keys(savedPos).length % 8;
@@ -894,6 +901,7 @@ function openApp(app) {
     const win  = document.createElement('div');
     win.className = 'os-window'; win.id = wid;
     win.style.cssText = `left:${left}px;top:${top}px;width:${app.w}px;height:${app.h}px;z-index:${++zCounter};`;
+    win.dataset.appUrl = app.url;
     win.innerHTML = `
         <div class="win-header" id="hdr-${app.id}">
             <div class="win-controls">
@@ -922,6 +930,9 @@ function closeWin(id) {
 }
 function minimizeWin(id) {
     const w = document.getElementById('win-'+id); if (!w) return;
+    // iframeをアンロードしてメモリ解放
+    const iframe = w.querySelector('iframe');
+    if (iframe && iframe.src !== 'about:blank') { iframe.src = 'about:blank'; }
     w.classList.add('minimized');
     if (activeWindowId === 'win-'+id) activeWindowId = null;
     updateTaskbar();
@@ -995,8 +1006,15 @@ function updateTaskbar() {
         if (win.id === activeWindowId) btn.classList.add('active');
         btn.innerHTML = `<span class="tb-icon">${app.icon}</span><span class="tb-label">${app.name}</span>`;
         btn.addEventListener('click', () => {
-            if (win.classList.contains('minimized')) { win.classList.remove('minimized'); bringToFront(win.id); }
-            else if (win.id === activeWindowId) { minimizeWin(id); }
+            if (win.classList.contains('minimized')) {
+                win.classList.remove('minimized');
+                // iframeを復元
+                const iframe = win.querySelector('iframe');
+                if (iframe && iframe.src.endsWith('about:blank') && win.dataset.appUrl) {
+                    iframe.src = win.dataset.appUrl;
+                }
+                bringToFront(win.id);
+            } else if (win.id === activeWindowId) { minimizeWin(id); }
             else { bringToFront(win.id); }
         });
         c.appendChild(btn);
