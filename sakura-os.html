@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta name="version" content="1.5.9">
-    <title>SAKURA OS v1.5.9</title>
+    <meta name="version" content="1.6.0">
+    <title>SAKURA OS v1.6.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -187,9 +187,15 @@
 
         /* ── Info Area ── */
         #info-area {
-            position:fixed; left:272px; top:32px; bottom:48px; right:0; z-index:10; overflow:hidden;
+            position:fixed; left:272px; top:32px; bottom:48px;
+            width:calc((100vw - 272px) / 2); z-index:10;
+            overflow-y:auto; overflow-x:hidden;
+            display:flex; flex-direction:column; gap:0;
         }
-        .currency-row { position:absolute; top:18px; right:20px; display:flex; gap:12px; z-index:11; }
+        #info-area::-webkit-scrollbar { width:3px; }
+        #info-area::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+        .currency-row { display:flex; gap:12px; justify-content:flex-end;
+            padding:14px 14px 0; flex-shrink:0; }
         .currency-card {
             background:transparent;
             border:2px solid rgba(255,255,255,0.6); border-radius:var(--radius); padding:14px 18px; min-width:155px;
@@ -203,8 +209,9 @@
         .cur-load { color:var(--text-muted); font-size:11px; }
 
         .news-grid {
-            position:absolute; top:104px; left:14px; right:14px;
-            display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,110px); gap:8px; z-index:11;
+            margin:8px 14px 0; flex-shrink:0;
+            display:grid; grid-template-columns:repeat(3,1fr);
+            grid-template-rows:repeat(3,80px); gap:6px;
         }
         .news-card {
             background:transparent;
@@ -214,13 +221,15 @@
             user-select:text; -webkit-user-select:text;
         }
         .news-card:hover { border-color:rgba(233,30,99,0.4); background:rgba(233,30,99,0.06); transform:translateY(-2px); }
-        .news-src { font-size:12px; font-weight:700; color:#f06292; letter-spacing:0.3px; margin-bottom:6px; }
-        .news-title { font-size:14px; font-weight:700; color:var(--text); line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; text-shadow:0 1px 8px rgba(0,0,0,1); }
-        .news-time { font-size:12px; color:var(--text-muted); margin-top:8px; }
+        .news-src { font-size:11px; font-weight:700; color:#f06292; letter-spacing:0.3px; margin-bottom:4px; }
+        .news-title { font-size:12px; font-weight:700; color:var(--text); line-height:1.4;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; flex:1;
+            text-shadow:0 1px 8px rgba(0,0,0,1); }
+        .news-time { font-size:11px; color:var(--text-muted); margin-top:4px; }
 
         /* ── Desktop Calendar + Tasks ── */
         #dcal-wrapper {
-            position:absolute; top:464px; left:14px; right:14px; z-index:11;
+            margin:8px 14px 0; flex-shrink:0;
             display:flex; gap:12px; align-items:flex-start;
         }
         #desktop-calendar {
@@ -263,6 +272,37 @@
         .dcal-task-addr { font-size:13px; color:var(--text-dim); margin-top:3px; }
         .dcal-tasks-empty { font-size:14px; color:var(--text-muted); text-align:center; padding:16px 0; }
         .dcal-tasks-loading { font-size:13px; color:var(--text-muted); text-align:center; padding:12px 0; }
+
+        /* ── AI Panel ── */
+        #ai-panel {
+            position:fixed; right:0; top:32px; bottom:48px;
+            width:calc((100vw - 272px) / 2); z-index:10;
+            display:flex; flex-direction:column;
+            border-left:1px solid rgba(255,255,255,0.08);
+        }
+        #ai-iframe {
+            flex:1; width:100%; border:none; display:block;
+        }
+
+        /* ── AI Quick Input（センター列最下部）── */
+        #ai-chat-bar {
+            flex-shrink:0; margin:10px 14px 12px; display:flex; gap:8px; align-items:flex-end;
+        }
+        #os-ai-input {
+            flex:1; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.3);
+            border-radius:12px; color:var(--text); font-size:14px; font-family:inherit;
+            padding:10px 14px; resize:none; outline:none; line-height:1.5; max-height:80px;
+            transition:border-color var(--tr);
+        }
+        #os-ai-input:focus { border-color:var(--accent); }
+        #os-ai-input::placeholder { color:var(--text-muted); }
+        #os-ai-send {
+            background:var(--accent); border:none; border-radius:10px; color:#fff;
+            width:40px; height:40px; font-size:18px; cursor:pointer; flex-shrink:0;
+            transition:opacity var(--tr), transform var(--tr);
+        }
+        #os-ai-send:hover { opacity:0.85; transform:scale(1.05); }
+        [data-theme="light"] #os-ai-input { background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.15); }
 
         /* ── Windows ── */
         #windows-container { position:fixed; left:0; top:32px; right:0; bottom:48px; z-index:100; pointer-events:none; }
@@ -484,6 +524,20 @@
             <div id="dcal-tasks-list"><div class="dcal-tasks-loading">読み込み中...</div></div>
         </div>
     </div>
+    <div id="ai-chat-bar">
+        <textarea id="os-ai-input" rows="1" placeholder="💬 SAKURA AIに話しかける...（Enter送信）"></textarea>
+        <button id="os-ai-send" title="送信">➤</button>
+    </div>
+</div>
+
+<!-- AI Panel -->
+<div id="ai-panel">
+    <iframe id="ai-iframe"
+        src="/system/sakura-ai/?embed=1"
+        frameborder="0"
+        allow="microphone"
+        loading="lazy">
+    </iframe>
 </div>
 
 <!-- Windows Container -->
@@ -1406,6 +1460,29 @@ function updateMascotKnob() {
 
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', () => { init(); updateMascotKnob(); });
+
+// ── AI Quick Input ─────────────────────────────
+const osAiInput = document.getElementById('os-ai-input');
+const osAiFrame = document.getElementById('ai-iframe');
+
+osAiInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        osAiSend();
+    }
+});
+osAiInput.addEventListener('input', () => {
+    osAiInput.style.height = 'auto';
+    osAiInput.style.height = Math.min(osAiInput.scrollHeight, 80) + 'px';
+});
+
+function osAiSend() {
+    const text = osAiInput.value.trim();
+    if (!text) return;
+    osAiFrame.contentWindow.postMessage({ type: 'send', text }, '*');
+    osAiInput.value = '';
+    osAiInput.style.height = 'auto';
+}
 </script>
 <script src="/system/SAKURA-NET-Mascot/mascot.js"></script>
 </body>
