@@ -732,39 +732,56 @@ function startClock() {
     setInterval(tick, 1000);
 }
 
-// ── Weather (wttr.in / Osaka) ──
+// ── Weather (Open-Meteo / Osaka) ──
 const WX_ICONS = {
-    113:'☀️',116:'⛅',119:'🌥️',122:'☁️',143:'🌫️',176:'🌦️',179:'🌨️',
-    182:'🌧️',185:'🌧️',200:'⛈️',227:'🌨️',230:'❄️',248:'🌫️',260:'🌫️',
-    263:'🌦️',266:'🌦️',281:'🌧️',284:'🌧️',293:'🌧️',296:'🌧️',299:'🌧️',
-    302:'🌧️',305:'🌧️',308:'⛈️',317:'🌨️',320:'🌨️',323:'🌨️',326:'🌨️',
-    329:'❄️',332:'❄️',335:'❄️',338:'❄️',350:'🌧️',353:'🌦️',356:'🌧️',
-    359:'⛈️',362:'🌨️',365:'🌨️',368:'🌨️',371:'❄️',386:'⛈️',389:'⛈️',395:'❄️',
+    0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
+    45:'🌫️', 48:'🌫️',
+    51:'🌦️', 53:'🌦️', 55:'🌦️', 56:'🌧️', 57:'🌧️',
+    61:'🌦️', 63:'🌧️', 65:'🌧️', 66:'🌧️', 67:'🌧️',
+    71:'🌨️', 73:'🌨️', 75:'❄️', 77:'❄️',
+    80:'🌦️', 81:'🌧️', 82:'⛈️',
+    85:'🌨️', 86:'❄️',
+    95:'⛈️', 96:'⛈️', 99:'⛈️',
+};
+const WX_DESCS = {
+    0:'快晴', 1:'晴れ', 2:'一部曇り', 3:'曇り',
+    45:'霧', 48:'着氷霧',
+    51:'霧雨', 53:'霧雨', 55:'強い霧雨', 56:'着氷性霧雨', 57:'着氷性霧雨',
+    61:'小雨', 63:'雨', 65:'大雨', 66:'着氷性の雨', 67:'着氷性の雨',
+    71:'小雪', 73:'雪', 75:'大雪', 77:'細雪',
+    80:'にわか雨', 81:'にわか雨', 82:'激しいにわか雨',
+    85:'にわか雪', 86:'強いにわか雪',
+    95:'雷雨', 96:'雷雨（ひょう）', 99:'雷雨（大粒のひょう）',
 };
 const FC_DAYS = ['今日','明日','明後日'];
 
 async function fetchWeather() {
     try {
-        const res = await fetch('https://wttr.in/Osaka?format=j1');
+        const url = 'https://api.open-meteo.com/v1/forecast'
+            + '?latitude=34.6937&longitude=135.5023'
+            + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation'
+            + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum'
+            + '&timezone=Asia%2FTokyo&forecast_days=3';
+        const res = await fetch(url);
         const data = await res.json();
-        const cc = data.current_condition[0];
-        const jaDesc = cc.lang_ja?.[0]?.value || cc.weatherDesc?.[0]?.value || '';
-        document.getElementById('wx-icon').textContent  = WX_ICONS[+cc.weatherCode] || '🌤️';
-        document.getElementById('wx-temp').textContent  = cc.temp_C;
-        document.getElementById('wx-desc').textContent  = jaDesc;
-        document.getElementById('wx-feels').textContent = cc.FeelsLikeC + '°C';
-        document.getElementById('wx-humid').textContent = cc.humidity + '%';
-        document.getElementById('wx-wind').textContent  = cc.windspeedKmph + ' km/h';
-        document.getElementById('wx-precip').textContent= cc.precipMM + ' mm';
+        const cur = data.current;
+        const code = cur.weather_code;
+        document.getElementById('wx-icon').textContent  = WX_ICONS[code] || '🌤️';
+        document.getElementById('wx-temp').textContent  = Math.round(cur.temperature_2m);
+        document.getElementById('wx-desc').textContent  = WX_DESCS[code] || '';
+        document.getElementById('wx-feels').textContent = Math.round(cur.apparent_temperature) + '°C';
+        document.getElementById('wx-humid').textContent = cur.relative_humidity_2m + '%';
+        document.getElementById('wx-wind').textContent  = Math.round(cur.wind_speed_10m) + ' km/h';
+        document.getElementById('wx-precip').textContent= cur.precipitation.toFixed(1) + ' mm';
 
         const fc = document.getElementById('wx-forecast');
         fc.innerHTML = '';
-        (data.weather || []).slice(0,3).forEach((day, i) => {
-            const code = +( day.hourly?.[4]?.weatherCode || 113 );
-            const rain = day.hourly.reduce((s,h) => s + parseFloat(h.precipMM||0), 0).toFixed(1);
+        (data.daily.time || []).slice(0,3).forEach((_, i) => {
+            const dc = data.daily.weather_code[i];
+            const rain = (data.daily.precipitation_sum[i] || 0).toFixed(1);
             const row = document.createElement('div');
             row.className = 'wx-fc-row';
-            row.innerHTML = `<span class="wx-fc-day">${FC_DAYS[i]||day.date}</span><span class="wx-fc-icon">${WX_ICONS[code]||'🌤️'}</span><span class="wx-fc-rain">${rain}mm</span><span class="wx-fc-temps">↑${day.maxtempC} <span class="wx-fc-low">↓${day.mintempC}</span></span>`;
+            row.innerHTML = `<span class="wx-fc-day">${FC_DAYS[i]||_}</span><span class="wx-fc-icon">${WX_ICONS[dc]||'🌤️'}</span><span class="wx-fc-rain">${rain}mm</span><span class="wx-fc-temps">↑${Math.round(data.daily.temperature_2m_max[i])} <span class="wx-fc-low">↓${Math.round(data.daily.temperature_2m_min[i])}</span></span>`;
             fc.appendChild(row);
         });
     } catch (e) {
