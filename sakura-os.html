@@ -188,7 +188,7 @@
         /* ── Info Area ── */
         #info-area {
             position:fixed; left:272px; top:32px; bottom:48px;
-            width:calc((100vw - 272px) * 0.7); z-index:10;
+            width:calc((100vw - 272px) * 0.8); z-index:10;
             overflow-y:auto; overflow-x:hidden;
             display:flex; flex-direction:column; gap:0;
         }
@@ -276,7 +276,7 @@
         /* ── AI Panel ── */
         #ai-panel {
             position:fixed; right:0; top:32px; bottom:48px;
-            width:calc((100vw - 272px) * 0.3); z-index:10;
+            width:calc((100vw - 272px) * 0.2); z-index:10;
             display:flex; flex-direction:column;
             border-left:1px solid rgba(255,255,255,0.08);
         }
@@ -284,25 +284,6 @@
             flex:1; width:100%; border:none; display:block;
         }
 
-        /* ── AI Quick Input（センター列最下部）── */
-        #ai-chat-bar {
-            flex-shrink:0; margin:10px 14px 12px; display:flex; gap:8px; align-items:flex-end;
-        }
-        #os-ai-input {
-            flex:1; background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.3);
-            border-radius:12px; color:var(--text); font-size:14px; font-family:inherit;
-            padding:10px 14px; resize:none; outline:none; line-height:1.5; max-height:80px;
-            transition:border-color var(--tr);
-        }
-        #os-ai-input:focus { border-color:var(--accent); }
-        #os-ai-input::placeholder { color:var(--text-muted); }
-        #os-ai-send {
-            background:var(--accent); border:none; border-radius:10px; color:#fff;
-            width:40px; height:40px; font-size:18px; cursor:pointer; flex-shrink:0;
-            transition:opacity var(--tr), transform var(--tr);
-        }
-        #os-ai-send:hover { opacity:0.85; transform:scale(1.05); }
-        [data-theme="light"] #os-ai-input { background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.15); }
 
         /* ── Windows ── */
         #windows-container { position:fixed; left:0; top:32px; right:0; bottom:48px; z-index:100; pointer-events:none; }
@@ -524,10 +505,7 @@
             <div id="dcal-tasks-list"><div class="dcal-tasks-loading">読み込み中...</div></div>
         </div>
     </div>
-    <div id="ai-chat-bar">
-        <textarea id="os-ai-input" rows="1" placeholder="💬 SAKURA AIに話しかける...（Enter送信）"></textarea>
-        <button id="os-ai-send" title="送信">➤</button>
-    </div>
+
 </div>
 
 <!-- AI Panel -->
@@ -1461,28 +1439,7 @@ function updateMascotKnob() {
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', () => { init(); updateMascotKnob(); });
 
-// ── AI Quick Input ─────────────────────────────
-const osAiInput = document.getElementById('os-ai-input');
-const osAiFrame = document.getElementById('ai-iframe');
 
-osAiInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        osAiSend();
-    }
-});
-osAiInput.addEventListener('input', () => {
-    osAiInput.style.height = 'auto';
-    osAiInput.style.height = Math.min(osAiInput.scrollHeight, 80) + 'px';
-});
-
-function osAiSend() {
-    const text = osAiInput.value.trim();
-    if (!text) return;
-    osAiFrame.contentWindow.postMessage({ type: 'send', text }, '*');
-    osAiInput.value = '';
-    osAiInput.style.height = 'auto';
-}
 </script>
 <script src="/system/SAKURA-NET-Mascot/mascot.js"></script>
 </body>
