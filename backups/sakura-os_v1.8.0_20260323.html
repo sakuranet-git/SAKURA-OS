@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta name="version" content="1.8.1">
-    <title>SAKURA OS v1.8.1</title>
+    <meta name="version" content="1.8.0">
+    <title>SAKURA OS v1.8.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -401,85 +401,6 @@
         .tb-logout { padding:5px 12px; border-radius:8px; border:1px solid rgba(255,100,100,0.3); background:rgba(255,80,80,0.08); color:rgba(255,120,120,0.8); cursor:pointer; font-size:12px; font-family:inherit; font-weight:600; transition:all var(--tr); }
         .tb-logout:hover { background:rgba(255,80,80,0.2); color:#ff8080; }
 
-        /* ── Mascot Floating Video ── */
-        #mascot-float {
-            position: fixed;
-            bottom: 60px;
-            right: 30px;
-            z-index: 9000;
-            cursor: grab;
-            user-select: none;
-            display: none;
-        }
-        #mascot-float.visible { display: block; }
-        #mascot-float.dragging { cursor: grabbing; }
-        #mascot-inner {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #mascot-float.bubble-right  #mascot-inner { flex-direction: row; }
-        #mascot-float.bubble-left   #mascot-inner { flex-direction: row-reverse; }
-        #mascot-float.bubble-top    #mascot-inner { flex-direction: column-reverse; align-items: center; }
-        #mascot-float.bubble-bottom #mascot-inner { flex-direction: column; align-items: center; }
-        #mascot-video-wrap {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,105,180,0.3);
-            transition: box-shadow 0.3s ease;
-            flex-shrink: 0;
-        }
-        #mascot-float:hover #mascot-video-wrap { box-shadow: 0 8px 32px rgba(230,0,126,0.4), 0 0 0 1px rgba(255,105,180,0.5); }
-        #mascot-float.dragging #mascot-video-wrap { box-shadow: 0 12px 48px rgba(230,0,126,0.5), 0 0 0 2px rgba(255,105,180,0.6); transition: none; }
-        #mascot-float video { width:100%; height:100%; object-fit:cover; pointer-events:none; }
-        #mascot-float-close, #mascot-bubble-dir {
-            position: absolute;
-            background: rgba(0,0,0,0.6);
-            border: none;
-            border-radius: 50%;
-            color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 2;
-        }
-        #mascot-float-close { top:6px; right:6px; width:24px; height:24px; font-size:14px; }
-        #mascot-bubble-dir  { bottom:6px; right:6px; width:30px; height:30px; font-size:13px; }
-        #mascot-float:hover #mascot-float-close,
-        #mascot-float:hover #mascot-bubble-dir { opacity: 1; }
-        #mascot-float-close:hover { background: rgba(230,0,126,0.7); }
-        #mascot-bubble-dir:hover  { background: rgba(100,100,220,0.7); }
-        #mascot-bubble {
-            position: relative;
-            background: rgba(255,245,250,0.95);
-            backdrop-filter: blur(10px);
-            border: 3px solid #fff;
-            border-radius: 20px;
-            padding: 12px 16px;
-            box-shadow: 0 6px 20px rgba(255,182,193,0.6);
-            max-width: 180px;
-            min-width: 100px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
-        }
-        #mascot-bubble.show { opacity: 1; }
-        #mascot-bubble-text { font-size:0.85rem; font-weight:700; color:#8b5a62; line-height:1.4; text-align:center; word-break:break-word; margin:0; }
-        #mascot-float.bubble-right #mascot-bubble::before { content:''; position:absolute; top:50%; left:-18px; transform:translateY(-50%); border:9px solid transparent; border-right-color:#fff; }
-        #mascot-float.bubble-right #mascot-bubble::after  { content:''; position:absolute; top:50%; left:-12px; transform:translateY(-50%); border:7px solid transparent; border-right-color:rgba(255,245,250,0.95); }
-        #mascot-float.bubble-left  #mascot-bubble::before { content:''; position:absolute; top:50%; right:-18px; transform:translateY(-50%); border:9px solid transparent; border-left-color:#fff; }
-        #mascot-float.bubble-left  #mascot-bubble::after  { content:''; position:absolute; top:50%; right:-12px; transform:translateY(-50%); border:7px solid transparent; border-left-color:rgba(255,245,250,0.95); }
-        #mascot-float.bubble-top   #mascot-bubble::before { content:''; position:absolute; bottom:-18px; left:50%; transform:translateX(-50%); border:9px solid transparent; border-top-color:#fff; }
-        #mascot-float.bubble-top   #mascot-bubble::after  { content:''; position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); border:7px solid transparent; border-top-color:rgba(255,245,250,0.95); }
-        #mascot-float.bubble-bottom #mascot-bubble::before { content:''; position:absolute; top:-18px; left:50%; transform:translateX(-50%); border:9px solid transparent; border-bottom-color:#fff; }
-        #mascot-float.bubble-bottom #mascot-bubble::after  { content:''; position:absolute; top:-12px; left:50%; transform:translateX(-50%); border:7px solid transparent; border-bottom-color:rgba(255,245,250,0.95); }
-
         /* ── Wallpaper Panel ── */
         #wallpaper-panel {
             position:fixed; bottom:56px; right:8px; width:370px;
@@ -666,27 +587,12 @@
 <div id="windows-container"></div>
 <div id="drag-blocker"></div>
 
-<!-- Mascot Floating Video -->
-<div id="mascot-float">
-    <div id="mascot-inner">
-        <div id="mascot-video-wrap">
-            <video src="/system/sakura-ai/assets/mascot-video.mp4" loop muted autoplay playsinline></video>
-            <button id="mascot-float-close" onclick="toggleMascot(false)" title="閉じる">✕</button>
-            <button id="mascot-bubble-dir" title="吹き出し方向切り替え">→</button>
-        </div>
-        <div id="mascot-bubble">
-            <p id="mascot-bubble-text">こんにちは！</p>
-        </div>
-    </div>
-</div>
-
 <!-- Taskbar -->
 <div id="taskbar">
     <div id="tb-logo" onclick="location.reload()" title="トップに戻る（再読み込み）"><span>🌸</span> SAKURA OS</div>
     <div id="tb-windows"></div>
     <div id="tb-right">
         <button class="tb-icon-btn" title="壁紙変更" onclick="toggleWpPanel()">🖼️</button>
-        <button class="tb-icon-btn" id="mascot-toggle-btn" title="マスコット" onclick="toggleMascot()">🎬</button>
         <button class="tb-icon-btn" id="theme-btn" title="テーマ切り替え" onclick="toggleTheme()">🌙</button>
         <span id="tb-clock">--:--</span>
         <span id="tb-user">---</span>
@@ -1378,127 +1284,6 @@ function renderUploadList() {
 })();
 function toggleWpPanel() { document.getElementById('wallpaper-panel').classList.toggle('open'); }
 function closeWpPanel()  { document.getElementById('wallpaper-panel').classList.remove('open'); }
-
-// ── Mascot Floating Video ──
-(function() {
-    const floatEl = document.getElementById('mascot-float');
-    const toggleBtn = document.getElementById('mascot-toggle-btn');
-    const video = floatEl ? floatEl.querySelector('video') : null;
-    const bubbleEl = document.getElementById('mascot-bubble');
-    const bubbleText = document.getElementById('mascot-bubble-text');
-    const dirBtn = document.getElementById('mascot-bubble-dir');
-    const STORAGE_KEY = 'sakura_os_mascot';
-    const POS_KEY = 'sakura_os_mascot_pos';
-    const DIR_KEY = 'sakura_os_mascot_dir';
-    const DIRS = ['right', 'bottom', 'left', 'top'];
-    const DIR_ICONS = { right: '→', bottom: '↓', left: '←', top: '↑' };
-
-    function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; } }
-    function saveState(on) { localStorage.setItem(STORAGE_KEY, JSON.stringify(on)); }
-    function loadPos() { try { return JSON.parse(localStorage.getItem(POS_KEY)); } catch { return null; } }
-    function savePos(x, y) { localStorage.setItem(POS_KEY, JSON.stringify({ x, y })); }
-    function loadDir() { return localStorage.getItem(DIR_KEY) || 'right'; }
-    function saveDir(d) { localStorage.setItem(DIR_KEY, d); }
-
-    // 吹き出し方向
-    let currentDir = loadDir();
-    function applyDir(d) {
-        DIRS.forEach(dd => floatEl.classList.remove('bubble-' + dd));
-        floatEl.classList.add('bubble-' + d);
-        if (dirBtn) dirBtn.textContent = DIR_ICONS[d];
-        currentDir = d; saveDir(d);
-    }
-    if (floatEl) applyDir(currentDir);
-    if (dirBtn) dirBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        applyDir(DIRS[(DIRS.indexOf(currentDir) + 1) % DIRS.length]);
-    });
-
-    // 吹き出しセリフ
-    const dialogues = [
-        'こんにちは！',
-        '今日も一日がんばろうね！',
-        'えへへっ♪',
-        '何かお手伝いできることはある？',
-        'わぁっ、すごいすごい！',
-        'お疲れ様です！',
-        'さくらねっと、がんばってます！',
-    ];
-    let dlgIndex = 0;
-    function showDialogue(text) {
-        if (!bubbleEl || !bubbleText) return;
-        bubbleEl.classList.remove('show');
-        setTimeout(() => { bubbleText.textContent = text; bubbleEl.classList.add('show'); }, 400);
-    }
-    function nextDialogue() { dlgIndex = (dlgIndex + 1) % dialogues.length; showDialogue(dialogues[dlgIndex]); }
-    setTimeout(() => showDialogue(dialogues[0]), 800);
-    setInterval(nextDialogue, 6000);
-    if (video) video.addEventListener('click', nextDialogue);
-
-    // トグル（デフォルトOFF）
-    window.toggleMascot = function(forceState) {
-        if (!floatEl) return;
-        const isOn = floatEl.classList.contains('visible');
-        const next = typeof forceState === 'boolean' ? forceState : !isOn;
-        if (next) {
-            floatEl.classList.add('visible');
-            if (video) { video.currentTime = 0; video.play().catch(() => {}); }
-            if (toggleBtn) toggleBtn.style.background = 'rgba(255,105,180,0.35)';
-        } else {
-            floatEl.classList.remove('visible');
-            if (video) video.pause();
-            if (toggleBtn) toggleBtn.style.background = '';
-        }
-        saveState(next);
-    };
-
-    // ドラッグ処理
-    let isDragging = false, startX, startY, startLeft, startTop;
-    function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
-    function onStart(ex, ey) {
-        isDragging = true; floatEl.classList.add('dragging');
-        const rect = floatEl.getBoundingClientRect();
-        startX = ex; startY = ey; startLeft = rect.left; startTop = rect.top;
-    }
-    function onMove(ex, ey) {
-        if (!isDragging) return;
-        const dx = ex - startX, dy = ey - startY;
-        floatEl.style.left = clamp(startLeft + dx, 0, window.innerWidth - floatEl.offsetWidth) + 'px';
-        floatEl.style.top = clamp(startTop + dy, 0, window.innerHeight - floatEl.offsetHeight) + 'px';
-        floatEl.style.right = 'auto'; floatEl.style.bottom = 'auto';
-    }
-    function onEnd() {
-        if (!isDragging) return;
-        isDragging = false; floatEl.classList.remove('dragging');
-        savePos(parseInt(floatEl.style.left), parseInt(floatEl.style.top));
-    }
-    if (floatEl) {
-        floatEl.addEventListener('mousedown', (e) => {
-            if (e.target.id === 'mascot-float-close' || e.target.id === 'mascot-bubble-dir') return;
-            e.preventDefault(); onStart(e.clientX, e.clientY);
-        });
-        document.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
-        document.addEventListener('mouseup', onEnd);
-        floatEl.addEventListener('touchstart', (e) => {
-            if (e.target.id === 'mascot-float-close' || e.target.id === 'mascot-bubble-dir') return;
-            const t = e.touches[0]; onStart(t.clientX, t.clientY);
-        }, { passive: true });
-        document.addEventListener('touchmove', (e) => {
-            if (!isDragging) return; const t = e.touches[0]; onMove(t.clientX, t.clientY);
-        }, { passive: true });
-        document.addEventListener('touchend', onEnd);
-        // 保存位置の復元
-        const pos = loadPos();
-        if (pos && typeof pos.x === 'number') {
-            floatEl.style.left = clamp(pos.x, 0, window.innerWidth - 180) + 'px';
-            floatEl.style.top = clamp(pos.y, 0, window.innerHeight - 180) + 'px';
-            floatEl.style.right = 'auto'; floatEl.style.bottom = 'auto';
-        }
-        // 保存状態の復元（デフォルトOFF：savedがtrueの場合のみON）
-        const saved = loadState();
-        if (saved === true) { toggleMascot(true); }
-    }
-})();
 
 // ── スライドショー（SAKURA AIと同ロジック・アップロード画像対象）──
 function startSlideshow() {
