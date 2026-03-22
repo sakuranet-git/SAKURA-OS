@@ -1575,8 +1575,10 @@ window.addEventListener('message', (e) => {
     if (action === 'search_customer' && payload?.query) {
         const app = APPS.find(a => a.id === 'customer');
         if (app) {
+            const alreadyOpen = !!document.getElementById('win-customer');
             openApp(app);
-            // 顧客管理が読み込まれてから検索クエリを送信（500ms 待機）
+            // 既に開いている場合は短め、新規起動は長めに待機
+            const delay = alreadyOpen ? 200 : 2500;
             setTimeout(() => {
                 const win = document.getElementById('win-customer');
                 const iframe = win?.querySelector('iframe');
@@ -1587,7 +1589,7 @@ window.addEventListener('message', (e) => {
                         payload: { query: payload.query }
                     }, location.origin);
                 }
-            }, 500);
+            }, delay);
         }
     }
 });
