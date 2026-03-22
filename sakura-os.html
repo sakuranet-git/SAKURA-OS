@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta name="version" content="1.6.1">
-    <title>SAKURA OS v1.6.1</title>
+    <title>SAKURA OS v1.7.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1552,6 +1552,27 @@ function stickyColor(id, color, dot) {
 function escHtml(s) {
     return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── SAKURA AI 連携: AI パネルからのメッセージ受信 ──
+window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin) return;
+    if (!e.data || e.data.source !== 'sakura-ai') return;
+    const { action, payload } = e.data;
+    if (action === 'open_app' && payload?.app_id) {
+        const app = APPS.find(a => a.id === payload.app_id);
+        if (app) {
+            openApp(app);
+            const aiIframe = document.getElementById('ai-iframe');
+            if (aiIframe?.contentWindow) {
+                aiIframe.contentWindow.postMessage({
+                    source: 'sakura-os',
+                    action: 'app_result',
+                    payload: { success: true, app_id: app.id, app_name: app.name }
+                }, location.origin);
+            }
+        }
+    }
+});
 
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', () => { init(); stickyRender(); });

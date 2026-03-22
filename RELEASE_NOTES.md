@@ -1,5 +1,14 @@
 # SAKURA OS リリースノート
 
+## v1.7.0 (2026-03-22)
+
+### SAKURA AI 連携 Phase 1: AI からアプリを開く
+
+- SAKURA AI（エージェントモード）から `open_app` ツールを呼び出すと、SAKURA OS 上のアプリが自動的に開くようになった
+- postMessage 双方向通信（AI iframe → SAKURA OS → openApp()）を実装
+- 対応アプリ: 顧客管理・申込み管理・利用明細・通話明細・SAKURA AI・SAKURA MUSIC・グループウェア・請求書
+- SAKURA AI 側の変更は sakura-ai リポジトリ v0.56 参照
+
 ## v1.6.1 (2026-03-22)
 
 ### マスコット機能を完全削除
