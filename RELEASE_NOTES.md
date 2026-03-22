@@ -1,5 +1,15 @@
 # SAKURA OS リリースノート
 
+## v1.8.0 (2026-03-23)
+
+### SAKURA AI 連携 Phase 2: AI から顧客を検索する
+
+- SAKURA AI から「田中さんを検索して」などと話しかけると、顧客管理アプリが開き自動で検索される
+- `search_customer` ツール追加（chat_stream.php / agent_stream.php 両対応）
+- postMessage 経由で ordersystem.html の検索ボックスに自動入力 → `filterTable()` 実行
+- ordersystem.html に SAKURA OS 連携リスナー追加
+- SAKURA AI 側の変更は sakura-ai リポジトリ v0.57 参照
+
 ## v1.7.0 (2026-03-22)
 
 ### SAKURA AI 連携 Phase 1: AI からアプリを開く

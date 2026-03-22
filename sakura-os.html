@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta name="version" content="1.6.1">
-    <title>SAKURA OS v1.7.0</title>
+    <meta name="version" content="1.8.0">
+    <title>SAKURA OS v1.8.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1570,6 +1570,24 @@ window.addEventListener('message', (e) => {
                     payload: { success: true, app_id: app.id, app_name: app.name }
                 }, location.origin);
             }
+        }
+    }
+    if (action === 'search_customer' && payload?.query) {
+        const app = APPS.find(a => a.id === 'customer');
+        if (app) {
+            openApp(app);
+            // 顧客管理が読み込まれてから検索クエリを送信（500ms 待機）
+            setTimeout(() => {
+                const win = document.getElementById('win-customer');
+                const iframe = win?.querySelector('iframe');
+                if (iframe?.contentWindow) {
+                    iframe.contentWindow.postMessage({
+                        source: 'sakura-os',
+                        action: 'search_customer',
+                        payload: { query: payload.query }
+                    }, location.origin);
+                }
+            }, 500);
         }
     }
 });
