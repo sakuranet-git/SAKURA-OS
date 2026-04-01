@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta name="version" content="1.8.2">
-    <title>SAKURA OS v1.8.2</title>
+    <title>SAKURA OS v1.8.3</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -769,6 +769,7 @@ const savedPos = {};
 let currentWpId = 'sakura-dark';
 let wpTimer = null, wpSlideIdx = 0, wpSlideshowOn = false, wpSlideshowSec = 30;
 let wpUploads = []; // [{ dataUrl, name }]
+let wp_server_images = [], wp_server_timer = null, wp_server_idx = 0;
 
 // ── IndexedDB ヘルパー（LocalStorageの5MB制限を回避するため壁紙保存に使用）──
 const WallpaperDB = {
@@ -827,22 +828,28 @@ async function init() {
         if (Array.isArray(saved)) wpUploads = saved;
     } catch {}
 
+    // サーバー画像リストを必ず先に取得（壁紙・スライドショー両方で使用）
+    // autoStart=false: この時点ではまだ壁紙として表示しない
+    await fetchServerWallpapers(false);
+
     const savedWp = localStorage.getItem('sakura_os_wp');
     if (savedWp) {
         try {
             const w = JSON.parse(savedWp);
             if (w.id === 'upload') {
-                // アップロード画像はwpUploadsから復元（二重保存なし）
                 const idx = (typeof w.uploadIdx === 'number' && wpUploads[w.uploadIdx]) ? w.uploadIdx : 0;
                 if (wpUploads.length > 0) applyWp(wpUploads[idx].dataUrl, 'upload');
-                else applyWp(WALLPAPERS[0].bg, WALLPAPERS[0].id);
+                else { localStorage.removeItem('sakura_os_wp'); startServerWallpaperCycle(); }
             } else {
-                applyWp(w.bg, w.id);
+                // x:1 = ユーザーが明示的に選んだ壁紙。ない場合はバグ自動保存 → サーバー壁紙へ
+                if (w.x) applyWp(w.bg, w.id);
+                else { localStorage.removeItem('sakura_os_wp'); startServerWallpaperCycle(); }
             }
         }
-        catch { applyWp(WALLPAPERS[0].bg, WALLPAPERS[0].id); }
+        catch { startServerWallpaperCycle(); }
     } else {
-        applyWp(WALLPAPERS[0].bg, WALLPAPERS[0].id);
+        if (wpUploads.length > 0) applyWp(wpUploads[0].dataUrl, 'upload');
+        else startServerWallpaperCycle();
     }
 
     try {
@@ -869,7 +876,7 @@ async function init() {
     fetchWeather();
     fetchNews();
     fetchCurrency();
-    loadSlideSettings();
+    await loadSlideSettings();
     hideLoading();
 }
 
@@ -1276,7 +1283,7 @@ function applyWp(bg, id, fade) {
         const idx = wpUploads.findIndex(u => u.dataUrl === bg);
         try { localStorage.setItem('sakura_os_wp', JSON.stringify({ id: 'upload', uploadIdx: idx >= 0 ? idx : 0 })); } catch { showToast('⚠️ ストレージ容量不足'); }
     } else {
-        try { localStorage.setItem('sakura_os_wp', JSON.stringify({ bg, id: currentWpId })); } catch { showToast('⚠️ ストレージ容量不足'); }
+        try { localStorage.setItem('sakura_os_wp', JSON.stringify({ bg, id: currentWpId, x: 1 })); } catch { showToast('⚠️ ストレージ容量不足'); }
     }
     document.querySelectorAll('.wp-swatch').forEach(s => s.classList.remove('active'));
     const active = document.getElementById('wps-' + currentWpId);
@@ -1397,7 +1404,7 @@ function closeWpPanel()  { document.getElementById('wallpaper-panel').classList.
     const CHAR_KEY = 'sakura_os_mascot_char';
     const DIRS = ['right', 'bottom', 'left', 'top'];
     const DIR_ICONS = { right: '→', bottom: '↓', left: '←', top: '↑' };
-    const CHAR_LIST = ['kahochan', 'miko'];
+    const CHAR_LIST = ['kahochan', 'miko', 'sakura'];
     const CHAR_DATA = {
         kahochan: {
             video: '/system/sakura-ai/assets/mascot-video.mp4',
@@ -1408,6 +1415,11 @@ function closeWpPanel()  { document.getElementById('wallpaper-panel').classList.
             video: '/system/sakura-ai/assets/mascot-miko-video.mp4',
             dialogues: ['にゃっはろー！', 'みこだわ！', '今日もエリートにいくにぇ！', 'おつみこ～！', '何か手伝うことある？', 'えへへっ、任せるにぇ！'],
             color: '#e83e8c'
+        },
+        sakura: {
+            video: '/system/sakura-ai/assets/mascot-sakura-video.mp4',
+            dialogues: ['ほえええ～！', 'はにゃ～ん…', '絶対だいじょうぶだよ', '封印解除（レリーズ）！', 'レリーズ！', 'ともよちゃん、ありがとう！', '今日も一日、頑張るぞ！', '汝のあるべき姿に戻れ！'],
+            color: '#ff69b4'
         }
     };
 
@@ -1539,28 +1551,82 @@ function closeWpPanel()  { document.getElementById('wallpaper-panel').classList.
     }
 })();
 
+// ── サーバー壁紙（SAKURA AIの wallpapers/ フォルダを使用・ストレージ不要）──
+// autoStart=true: 画像取得後すぐにサイクル開始（壁紙として使用時）
+// autoStart=false: 画像リストだけ取得（スライドショー用プリロード）
+async function fetchServerWallpapers(autoStart = true) {
+    try {
+        const res = await fetch('/system/sakura-ai/get_wallpapers.php');
+        const data = await res.json();
+        if (data.status === 'ok' && data.images && data.images.length > 0) {
+            wp_server_images = data.images.map(p => '/system/sakura-ai/' + p);
+            if (autoStart) startServerWallpaperCycle();
+        }
+    } catch {}
+}
+
+function startServerWallpaperCycle() {
+    if (wp_server_timer) clearInterval(wp_server_timer);
+    changeServerWallpaper();
+    wp_server_timer = setInterval(changeServerWallpaper, 5 * 60 * 1000);
+}
+
+function changeServerWallpaper() {
+    if (!wp_server_images.length) return;
+    const el = document.getElementById('desktop-wallpaper');
+    if (!el) return;
+    const url = wp_server_images[wp_server_idx];
+    const encoded = encodeURI(url);
+    const tempImg = new Image();
+    tempImg.src = encoded;
+    tempImg.onload = () => {
+        el.style.transition = 'opacity 0.8s ease';
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.style.background = `url('${encoded.replace(/'/g, "\\'")}') center/cover no-repeat`;
+            el.style.opacity = '1';
+        }, 800);
+    };
+    wp_server_idx = (wp_server_idx + 1) % wp_server_images.length;
+}
+
 // ── スライドショー（SAKURA AIと同ロジック・アップロード画像対象）──
 function startSlideshow() {
     if (wpTimer) clearInterval(wpTimer);
-    if (wpUploads.length === 0) { showToast('⚠️ 先に画像をアップロードしてください'); return; }
-    wpSlideIdx = wpSlideIdx % wpUploads.length;
-    const cycle = () => {
-        const u = wpUploads[wpSlideIdx];
-        applyWp(u.dataUrl, 'upload', true); // フェード付き
-        wpSlideIdx = (wpSlideIdx + 1) % wpUploads.length;
-        renderUploadList();
-    };
-    wpTimer = setInterval(cycle, wpSlideshowSec * 1000);
+    if (wpUploads.length > 0) {
+        // アップロード画像でスライドショー
+        wpSlideIdx = wpSlideIdx % wpUploads.length;
+        const cycle = () => {
+            const u = wpUploads[wpSlideIdx];
+            applyWp(u.dataUrl, 'upload', true);
+            wpSlideIdx = (wpSlideIdx + 1) % wpUploads.length;
+            renderUploadList();
+        };
+        wpTimer = setInterval(cycle, wpSlideshowSec * 1000);
+    } else if (wp_server_images.length > 0) {
+        // アップロードなし → サーバー壁紙でスライドショー
+        if (wp_server_timer) clearInterval(wp_server_timer);
+        changeServerWallpaper();
+        wp_server_timer = setInterval(changeServerWallpaper, wpSlideshowSec * 1000);
+    } else {
+        showToast('⚠️ 先に画像をアップロードしてください');
+        return;
+    }
     document.getElementById('wp-slide-indicator').classList.add('active');
 }
 
 function stopSlideshow() {
     if (wpTimer) { clearInterval(wpTimer); wpTimer = null; }
+    // サーバー壁紙タイマーはデフォルト間隔（5分）に戻す
+    if (wp_server_timer) clearInterval(wp_server_timer);
+    if (wp_server_images.length > 0) {
+        wp_server_timer = setInterval(changeServerWallpaper, 5 * 60 * 1000);
+    }
     document.getElementById('wp-slide-indicator').classList.remove('active');
 }
 
 function toggleSlideshow(on) {
-    if (on && wpUploads.length === 0) {
+    if (on && wpUploads.length === 0 && wp_server_images.length === 0) {
         showToast('⚠️ 先に画像をアップロードしてください');
         document.getElementById('wp-slide-on').checked = false;
         return;
@@ -1577,13 +1643,22 @@ function setSlideshowInterval(sec) {
     if (wpSlideshowOn) startSlideshow(); // 再起動して間隔反映
 }
 
-function saveSlideSettings() {
-    try { localStorage.setItem('sakura_os_slide', JSON.stringify({ on: wpSlideshowOn, sec: wpSlideshowSec })); } catch {}
+async function saveSlideSettings() {
+    await WallpaperDB.save('slide_settings', { on: wpSlideshowOn, sec: wpSlideshowSec });
 }
 
-function loadSlideSettings() {
+async function loadSlideSettings() {
     try {
-        const s = JSON.parse(localStorage.getItem('sakura_os_slide') || 'null');
+        let s = await WallpaperDB.load('slide_settings');
+        if (!s) {
+            // 旧 localStorage からの自動移行
+            const legacy = localStorage.getItem('sakura_os_slide');
+            if (legacy) {
+                s = JSON.parse(legacy);
+                await WallpaperDB.save('slide_settings', s);
+                localStorage.removeItem('sakura_os_slide');
+            }
+        }
         if (!s) return;
         wpSlideshowOn = s.on || false;
         wpSlideshowSec = s.sec || 30;
@@ -1745,19 +1820,30 @@ function showToast(msg) {
 }
 
 // ── Sticky Notes ─────────────────────────────────────
-const STICKY_KEY = 'sakura_sticky_notes';
+// IndexedDB（WallpaperDB共用）に保存。localStorage.clear()では消えない。
 const STICKY_COLORS = ['pink','blue','yellow','purple','green'];
 const STICKY_HEX    = { pink:'#e91e63', blue:'#2196f3', yellow:'#ffc107', purple:'#9c27b0', green:'#4caf50' };
 
-function stickyLoad() {
-    try { return JSON.parse(localStorage.getItem(STICKY_KEY)) || []; }
-    catch { return []; }
+async function stickyLoad() {
+    try {
+        const saved = await WallpaperDB.load('sticky_notes');
+        if (Array.isArray(saved)) return saved;
+        // 旧 localStorage からの自動移行
+        const legacy = localStorage.getItem('sakura_sticky_notes');
+        if (legacy) {
+            const notes = JSON.parse(legacy);
+            await WallpaperDB.save('sticky_notes', notes);
+            localStorage.removeItem('sakura_sticky_notes');
+            return notes;
+        }
+        return [];
+    } catch { return []; }
 }
-function stickySave(notes) {
-    localStorage.setItem(STICKY_KEY, JSON.stringify(notes));
+async function stickySave(notes) {
+    await WallpaperDB.save('sticky_notes', notes);
 }
-function stickyRender() {
-    const notes = stickyLoad();
+async function stickyRender() {
+    const notes = await stickyLoad();
     const list  = document.getElementById('sticky-list');
     list.innerHTML = '';
     notes.forEach(n => {
@@ -1777,28 +1863,28 @@ function stickyRender() {
         list.appendChild(el);
     });
 }
-function stickyAdd() {
-    const notes = stickyLoad();
+async function stickyAdd() {
+    const notes = await stickyLoad();
     notes.push({ id: Date.now(), title: '', body: '', color: 'pink' });
-    stickySave(notes);
-    stickyRender();
-    // focus new note's textarea
+    await stickySave(notes);
+    await stickyRender();
     const items = document.querySelectorAll('.sticky-note');
     if (items.length) items[items.length-1].querySelector('textarea').focus();
 }
-function stickyDelete(id) {
-    stickySave(stickyLoad().filter(n => n.id !== id));
-    stickyRender();
+async function stickyDelete(id) {
+    const notes = await stickyLoad();
+    await stickySave(notes.filter(n => n.id !== id));
+    await stickyRender();
 }
-function stickyUpdate(id, field, val) {
-    const notes = stickyLoad();
+async function stickyUpdate(id, field, val) {
+    const notes = await stickyLoad();
     const n = notes.find(n => n.id === id);
-    if (n) { n[field] = val; stickySave(notes); }
+    if (n) { n[field] = val; await stickySave(notes); }
 }
-function stickyColor(id, color, dot) {
-    const notes = stickyLoad();
+async function stickyColor(id, color, dot) {
+    const notes = await stickyLoad();
     const n = notes.find(n => n.id === id);
-    if (n) { n.color = color; stickySave(notes); }
+    if (n) { n.color = color; await stickySave(notes); }
     const card = dot.closest('.sticky-note');
     card.dataset.color = color;
     card.querySelectorAll('.sticky-color-dot').forEach(d => d.classList.toggle('active', d.dataset.c === color));
