@@ -1,11 +1,5 @@
 # SAKURA OS リリースノート
 
-## v1.9.4 (2026-06-09)
-### 修正
-- **SAKURA BLOOM 管理画面に直結**: URLを `index.php`（紹介LP）→ `events_view.php`（管理画面）に変更。index.php は長い紹介ページでOSウィンドウ内では下が見切れ、かつ「管理画面を開く」が新規タブ遷移だったため、最初から管理画面を表示するように修正。
-### 保護
-- 変更前バックアップを `backups/v1.9.4_bloom_admin_url_20260609/` に作成。
-
 ## v1.9.3 (2026-06-09)
 ### 修正
 - **SAKURA BLOOM URL修正**: URLを `/system/SAKURA-BLOOM/` → `/system/SAKURA-BLOOM/index.php` に変更。トレイリングスラッシュだと静的LP（index.html）が表示され管理画面に入れなかったため、ポータルと同じ `index.php`（管理画面）を直接指定。
