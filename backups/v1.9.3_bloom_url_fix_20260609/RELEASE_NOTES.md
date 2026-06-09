@@ -1,11 +1,5 @@
 # SAKURA OS リリースノート
 
-## v1.9.3 (2026-06-09)
-### 修正
-- **SAKURA BLOOM URL修正**: URLを `/system/SAKURA-BLOOM/` → `/system/SAKURA-BLOOM/index.php` に変更。トレイリングスラッシュだと静的LP（index.html）が表示され管理画面に入れなかったため、ポータルと同じ `index.php`（管理画面）を直接指定。
-### 保護
-- 変更前バックアップを `backups/v1.9.3_bloom_url_fix_20260609/` に作成。
-
 ## v1.9.2 (2026-06-09)
 ### 追加
 - **SAKURA BLOOMアプリ追加**: アプリ一覧に「SAKURA BLOOM（🌸）」を追加。請求書の直下に配置。クリックすると `/system/SAKURA-BLOOM/` をOS内ウィンドウで開く。
